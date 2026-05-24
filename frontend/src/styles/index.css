@@ -1,0 +1,500 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==================== GLOBAL SETUP ==================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: 'Inter', 'Space Grotesk', sans-serif;
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  position: relative;
+  background: linear-gradient(135deg, #010117 0%, #0a0e27 50%, #050812 100%);
+  color: #ffffff;
+}
+
+html.light body {
+  background: linear-gradient(135deg, #eef2ff 0%, #c7d2fe 45%, #e2e8f0 100%);
+  color: #0f172a;
+}
+
+html.light .glass,
+html.light .glass-thick,
+html.light .glass-purple,
+html.light .glass-pink {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(15, 23, 42, 0.15);
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.12), inset 0 0 10px rgba(255, 255, 255, 0.08);
+}
+
+html.light .glow-text,
+html.light .glow-text-pink,
+html.light .glow-text-purple,
+html.light .glow-neon {
+  color: #0f172a;
+}
+
+html.light .border-glow,
+html.light .border-glow-pink,
+html.light .border-glow-purple {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(0, 245, 255, 0.12), transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.12), transparent 50%),
+    radial-gradient(circle at 40% 20%, rgba(236, 72, 153, 0.08), transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+  animation: gradient-shift 8s ease infinite;
+}
+
+/* ==================== SCROLLBAR ==================== */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0e27;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #00f5ff, #8b5cf6);
+  border-radius: 999px;
+  border: 2px solid #0a0e27;
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #00f5ff, #8b5cf6);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+}
+
+/* ==================== GLASS EFFECT ==================== */
+
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 0 20px rgba(0, 245, 255, 0.08),
+    inset 0 0 10px rgba(255, 255, 255, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 245, 255, 0.05), transparent);
+  pointer-events: none;
+}
+
+.glass-thick {
+  background: rgba(5, 8, 18, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  box-shadow:
+    0 0 30px rgba(0, 245, 255, 0.1),
+    inset 0 0 15px rgba(255, 255, 255, 0.05);
+}
+
+.glass-pink {
+  background: rgba(236, 72, 153, 0.08);
+  border-color: rgba(236, 72, 153, 0.2);
+  box-shadow:
+    0 0 20px rgba(236, 72, 153, 0.1),
+    inset 0 0 10px rgba(236, 72, 153, 0.05);
+}
+
+.glass-purple {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.2);
+  box-shadow:
+    0 0 20px rgba(139, 92, 246, 0.1),
+    inset 0 0 10px rgba(139, 92, 246, 0.05);
+}
+
+/* ==================== CYBER GRID BACKGROUND ==================== */
+
+.cyber-grid {
+  background-image:
+    linear-gradient(
+      rgba(0, 245, 255, 0.08) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(0, 245, 255, 0.08) 1px,
+      transparent 1px
+    );
+  background-size: 50px 50px;
+  position: relative;
+}
+
+.cyber-grid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 245, 255, 0.05), transparent);
+  pointer-events: none;
+}
+
+/* ==================== GLOW EFFECTS ==================== */
+
+.hero-text-sharp {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.02em;
+}
+
+.hero-glow-behind {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  filter: blur(28px);
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+.glow-text {
+  text-shadow:
+    0 0 8px rgba(0, 245, 255, 0.8),
+    0 0 16px rgba(0, 245, 255, 0.5);
+  color: #00f5ff;
+}
+
+.glow-text-pink {
+  text-shadow:
+    0 0 8px rgba(236, 72, 153, 0.8),
+    0 0 16px rgba(236, 72, 153, 0.5);
+  color: #ec4899;
+}
+
+.glow-text-purple {
+  text-shadow:
+    0 0 8px rgba(139, 92, 246, 0.8),
+    0 0 16px rgba(139, 92, 246, 0.5);
+  color: #8b5cf6;
+}
+
+.glow-neon {
+  text-shadow: 0 0 10px rgba(0, 245, 255, 1), 0 0 20px rgba(0, 245, 255, 0.6);
+  letter-spacing: 0.05em;
+}
+
+/* ==================== BORDER GLOW ==================== */
+
+.border-glow {
+  border: 2px solid #00f5ff;
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.5), inset 0 0 20px rgba(0, 245, 255, 0.1);
+}
+
+.border-glow-pink {
+  border: 2px solid #ec4899;
+  box-shadow: 0 0 20px rgba(236, 72, 153, 0.5), inset 0 0 20px rgba(236, 72, 153, 0.1);
+}
+
+.border-glow-purple {
+  border: 2px solid #8b5cf6;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.5), inset 0 0 20px rgba(139, 92, 246, 0.1);
+}
+
+/* ==================== GRADIENT BACKGROUNDS ==================== */
+
+.bg-gradient-cyber {
+  background: linear-gradient(135deg, rgba(0, 245, 255, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+}
+
+.bg-gradient-pink {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(236, 72, 153, 0.05) 100%);
+}
+
+.bg-gradient-purple {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0.05) 100%);
+}
+
+/* ==================== SHIMMER EFFECT ==================== */
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0.2) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ==================== LOADERS & SPINNERS ==================== */
+
+.loader {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(0, 245, 255, 0.3);
+  border-top: 3px solid #00f5ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+}
+
+.loader-pulse {
+  animation: spin 1.5s linear infinite, pulse 2s ease-in-out infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ==================== BUTTONS ==================== */
+
+.btn-neon {
+  position: relative;
+  background: linear-gradient(135deg, rgba(0, 245, 255, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+  border: 2px solid rgba(0, 245, 255, 0.5);
+  color: #00f5ff;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(0, 245, 255, 0.3), inset 0 0 15px rgba(0, 245, 255, 0.1);
+}
+
+.btn-neon:hover {
+  background: linear-gradient(135deg, rgba(0, 245, 255, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
+  border-color: rgba(0, 245, 255, 0.8);
+  box-shadow: 0 0 30px rgba(0, 245, 255, 0.6), inset 0 0 20px rgba(0, 245, 255, 0.2), 0 0 40px rgba(0, 245, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-neon-pink {
+  border-color: rgba(236, 72, 153, 0.5);
+  color: #ec4899;
+  box-shadow: 0 0 15px rgba(236, 72, 153, 0.3), inset 0 0 15px rgba(236, 72, 153, 0.1);
+}
+
+.btn-neon-pink:hover {
+  border-color: rgba(236, 72, 153, 0.8);
+  box-shadow: 0 0 30px rgba(236, 72, 153, 0.6), inset 0 0 20px rgba(236, 72, 153, 0.2), 0 0 40px rgba(236, 72, 153, 0.4);
+}
+
+.btn-neon-purple {
+  border-color: rgba(139, 92, 246, 0.5);
+  color: #8b5cf6;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3), inset 0 0 15px rgba(139, 92, 246, 0.1);
+}
+
+.btn-neon-purple:hover {
+  border-color: rgba(139, 92, 246, 0.8);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.6), inset 0 0 20px rgba(139, 92, 246, 0.2), 0 0 40px rgba(139, 92, 246, 0.4);
+}
+
+/* ==================== FLOATING PARTICLES ==================== */
+
+.particle {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  background: #00f5ff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.8);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.particle-pink {
+  background: #ec4899;
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.8);
+}
+
+.particle-purple {
+  background: #8b5cf6;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
+}
+
+/* ==================== FIRE EFFECT ==================== */
+
+.fire-icon {
+  color: #ff6b00;
+  text-shadow: 0 0 10px #ff6b00, 0 0 20px #ff3300;
+  animation: fire-flicker 1.5s ease-in-out infinite;
+}
+
+.fire-text {
+  background: linear-gradient(45deg, #ffaa00, #ff3300, #ff6600);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 2s ease infinite;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+/* ==================== NEON BORDER ANIMATION ==================== */
+
+.neon-border {
+  position: relative;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.neon-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(90deg, #00f5ff, #8b5cf6, #ec4899, #00f5ff);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.6;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* ==================== HOLOGRAPHIC EFFECT ==================== */
+
+.holographic {
+  background: linear-gradient(
+    45deg,
+    rgba(0, 245, 255, 0.1) 0%,
+    rgba(139, 92, 246, 0.1) 25%,
+    rgba(236, 72, 153, 0.1) 50%,
+    rgba(0, 245, 255, 0.1) 100%
+  );
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+/* ==================== CYBERPUNK TEXT ==================== */
+
+.font-display {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.text-glitch {
+  position: relative;
+  animation: glitch 0.3s ease-in-out;
+}
+
+@keyframes glitch {
+  0%, 100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+}
+
+/* ==================== LAYERED DEPTH ==================== */
+
+.depth-layer-1 {
+  position: relative;
+  z-index: 1;
+}
+
+.depth-layer-2 {
+  position: relative;
+  z-index: 2;
+}
+
+.depth-layer-3 {
+  position: relative;
+  z-index: 3;
+}
+
+/* ==================== RESPONSIVE UTILITIES ==================== */
+
+@media (max-width: 768px) {
+  .hidden-mobile {
+    display: none;
+  }
+
+  .text-mobile {
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hidden-desktop {
+    display: none;
+  }
+}
+
+/* BUTTON GLOW */
+
+.glow-button {
+  transition: all 0.3s ease;
+}
+
+.glow-button:hover {
+  box-shadow:
+    0 0 15px rgba(0,245,255,0.6),
+    0 0 30px rgba(139,92,246,0.5);
+
+  transform: translateY(-2px);
+}
+
+/* ANIMATIONS */
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.float-animation {
+  animation: float 4s ease-in-out infinite;
+}
