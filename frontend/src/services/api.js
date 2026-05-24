@@ -1,16 +1,16 @@
 import axios from "axios";
 import { useAuthStore } from "../store/index";
 
-// Get API URL from environment, never fallback to localhost in production
+// STRICT: API URL must be configured in environment
 const apiUrl = import.meta.env.VITE_API_URL;
 
-if (!apiUrl) {
-  console.warn('⚠️ VITE_API_URL not configured. Using development fallback.');
-}
+// Log to console for debugging production issues
+console.log('🔌 API Base URL:', apiUrl || '❌ NOT SET - Login/Signup will fail');
 
 const API = axios.create({
-  baseURL: apiUrl || 'http://localhost:5000/api',
-  timeout: 15000,
+  baseURL: apiUrl,
+  timeout: 30000,
+  withCredentials: false,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -68,14 +68,21 @@ API.interceptors.response.use(
         message = 'Server error. Please try again later.';
       }
     } else if (error.request) {
-      // Request made but no response received
+      // Request made but no response received (network error, CORS, timeout, backend down)
       if (error.code === 'ECONNABORTED') {
-        message = 'Request timed out. Please check your connection and try again.';
+        message = 'Request timed out. Backend server may be starting up. Try again in 30 seconds.';
+      } else if (error.message.includes('CORS')) {
+        message = 'CORS error: Backend server may be blocking this request.';
       } else if (error.message.includes('Network')) {
-        message = 'Network error. Please check your internet connection.';
+        message = 'Network error: Unable to connect to the backend server.';
       } else {
-        message = 'Unable to reach the server. Please check your connection.';
+        message = 'Unable to reach the server. The backend may be offline or unreachable.';
       }
+      console.error('❌ Network/Backend Error:', {
+        message: error.message,
+        code: error.code,
+        url: apiUrl,
+      });
     } else {
       // Error during request setup
       message = error.message || 'An error occurred while processing your request.';
