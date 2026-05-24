@@ -35,25 +35,29 @@ class AnalyticsService:
     def get_weekly_progress(user_id):
         """Get weekly progress data"""
         from datetime import datetime, timedelta
-        
-        quizzes = Quiz.query.filter_by(user_id=user_id).all()
-        weekly_data = {}
-        
-        for i in range(7):
-            date = datetime.utcnow() - timedelta(days=i)
-            day_name = date.strftime('%A')
-            weekly_data[day_name] = {
+
+        now = datetime.utcnow()
+        quizzes = Quiz.query.filter_by(user_id=user_id, completed=True).all()
+        weekly_data = [
+            {
+                'day': (now - timedelta(days=i)).strftime('%a'),
                 'xp': 0,
-                'quizzes': 0
+                'quizzes': 0,
             }
-        
+            for i in reversed(range(7))
+        ]
+        lookup = {entry['day']: entry for entry in weekly_data}
+
         for quiz in quizzes:
-            if quiz.created_at:
-                day_name = quiz.created_at.strftime('%A')
-                if day_name in weekly_data:
-                    weekly_data[day_name]['xp'] += int(quiz.score)
-                    weekly_data[day_name]['quizzes'] += 1
-        
+            if not quiz.created_at:
+                continue
+            delta_days = (now.date() - quiz.created_at.date()).days
+            if 0 <= delta_days < 7:
+                day_name = quiz.created_at.strftime('%a')
+                if day_name in lookup:
+                    lookup[day_name]['xp'] += int(quiz.score)
+                    lookup[day_name]['quizzes'] += 1
+
         return {
             'weekly_progress': weekly_data
         }, 200

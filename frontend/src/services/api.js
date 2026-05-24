@@ -186,4 +186,11 @@ export const authService = {
   },
 };
 
+export const analyticsService = {
+  getStats: async () => API.get('/analytics/stats'),
+  getTopicPerformance: async () => API.get('/analytics/topic-performance'),
+  getWeeklyProgress: async () => API.get('/analytics/weekly-progress'),
+  getLeaderboard: async (limit = 10) => API.get(`/analytics/leaderboard?limit=${limit}`),
+};
+
 export default API;
