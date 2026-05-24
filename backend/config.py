@@ -1,64 +1,35 @@
 import os
-from pathlib import Path
 from datetime import timedelta
 
-
-def _resolve_sqlite_db_url(db_url: str) -> str:
-    """Resolve relative sqlite paths against the backend package location."""
-    if not db_url or not db_url.startswith('sqlite:///'):
-        return db_url
-
-    raw_path = db_url[len('sqlite:///'):]
-    path = Path(raw_path)
-    if path.is_absolute():
-        return db_url
-
-    resolved = (Path(__file__).resolve().parent / raw_path).resolve()
-    return f"sqlite:///{resolved.as_posix()}"
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
-    """Base configuration"""
-    DEBUG = False
-    TESTING = False
-    
-    # Database
-    default_db_path = Path(__file__).resolve().parent / 'instance' / 'techquiz.db'
-    SQLALCHEMY_DATABASE_URI = _resolve_sqlite_db_url(
-        os.getenv('DATABASE_URL', f"sqlite:///{default_db_path.as_posix()}")
-    )
+    SECRET_KEY = os.environ.get("SECRET_KEY", "techquiz-secret")
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
-    # JWT
-    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-in-production')
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
-    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
-    
-    # CORS - Allow frontend to communicate
-    CORS_ORIGINS = ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001']
-    
-    # AI API
-    GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
-    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
+
+    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "jwt-secret")
+
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=7)
+
 
 class DevelopmentConfig(Config):
-    """Development configuration"""
+    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(BASE_DIR, "techquiz.db")
     DEBUG = True
-    TESTING = False
 
-class TestingConfig(Config):
-    """Testing configuration"""
-    DEBUG = True
-    TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
 
 class ProductionConfig(Config):
-    """Production configuration"""
+
+    # Render-compatible SQLite path
+    db_path = os.path.join("/tmp", "techquiz.db")
+
+    SQLALCHEMY_DATABASE_URI = f"sqlite:///{db_path}"
+
     DEBUG = False
-    TESTING = False
+
 
 config = {
-    'development': DevelopmentConfig,
-    'testing': TestingConfig,
-    'production': ProductionConfig,
-    'default': DevelopmentConfig
+    "development": DevelopmentConfig,
+    "production": ProductionConfig,
+    "default": DevelopmentConfig
 }

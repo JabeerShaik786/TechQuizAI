@@ -1,12 +1,16 @@
 import axios from "axios";
 import { useAuthStore } from "../store/index";
 
-// Default to explicit backend API URL to avoid proxy misconfiguration
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Get API URL from environment, never fallback to localhost in production
+const apiUrl = import.meta.env.VITE_API_URL;
+
+if (!apiUrl) {
+  console.warn('⚠️ VITE_API_URL not configured. Using development fallback.');
+}
 
 const API = axios.create({
-  baseURL: apiUrl,
-  timeout: 10000,
+  baseURL: apiUrl || 'http://localhost:5000/api',
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -29,26 +33,57 @@ API.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor - Handle errors
+// Response Interceptor - Handle errors with readable messages
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Clear auth state on 401
-      useAuthStore.getState().logout();
-      window.location.href = "/login";
+    let message = 'An unexpected error occurred';
+    let details = null;
+
+    if (error.response) {
+      // Server responded with error status
+      message = error.response.data?.error || error.response.data?.message || `Error ${error.response.status}`;
+      details = error.response.data?.details || null;
+
+      // Handle 401 Unauthorized
+      if (error.response.status === 401) {
+        useAuthStore.getState().logout();
+        window.location.href = "/login";
+        message = 'Session expired. Please sign in again.';
+      }
+      // Handle 403 Forbidden
+      else if (error.response.status === 403) {
+        message = 'You do not have permission to perform this action.';
+      }
+      // Handle 404 Not Found
+      else if (error.response.status === 404) {
+        message = 'The requested resource was not found.';
+      }
+      // Handle 422 Validation Error
+      else if (error.response.status === 422) {
+        message = error.response.data?.message || 'Please check your input and try again.';
+      }
+      // Handle 500 Server Error
+      else if (error.response.status === 500) {
+        message = 'Server error. Please try again later.';
+      }
+    } else if (error.request) {
+      // Request made but no response received
+      if (error.code === 'ECONNABORTED') {
+        message = 'Request timed out. Please check your connection and try again.';
+      } else if (error.message.includes('Network')) {
+        message = 'Network error. Please check your internet connection.';
+      } else {
+        message = 'Unable to reach the server. Please check your connection.';
+      }
+    } else {
+      // Error during request setup
+      message = error.message || 'An error occurred while processing your request.';
     }
 
-    // Normalize server errors when available
-    if (error.response?.data) {
-      error.message = error.response.data.error || error.response.data.message || error.message;
-      error.details = error.response.data.details || null;
-    }
-
-    // If Axios throws a network error (no response) provide clearer message
-    if (!error.response) {
-      error.message = error.message || 'Network Error: Unable to reach backend';
-    }
+    // Attach message and details for caller to use
+    error.userMessage = message;
+    error.details = details;
 
     return Promise.reject(error);
   }

@@ -33,12 +33,15 @@ export const useAuthService = () => {
     } catch (error) {
       console.error('❌ Login error:', error)
       
+      // Use user-friendly message from API interceptor, fallback to error details
       const errorMessage = 
+        error.userMessage ||
         error.response?.data?.error ||
         error.response?.data?.message ||
         error.message ||
         'Login failed'
-      const errorDetails = error.response?.data?.details || null
+      
+      const errorDetails = error.response?.data?.details || error.details || null
       return {
         success: false,
         error: errorDetails ? `${errorMessage}: ${errorDetails}` : errorMessage,
@@ -72,12 +75,15 @@ export const useAuthService = () => {
     } catch (error) {
       console.error('❌ Signup error:', error)
       
+      // Use user-friendly message from API interceptor, fallback to error details
       const errorMessage = 
+        error.userMessage ||
         error.response?.data?.error ||
         error.response?.data?.message ||
         error.message ||
         'Signup failed'
-      const errorDetails = error.response?.data?.details || null
+      
+      const errorDetails = error.response?.data?.details || error.details || null
       return {
         success: false,
         error: errorDetails ? `${errorMessage}: ${errorDetails}` : errorMessage,

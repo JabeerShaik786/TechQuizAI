@@ -50,22 +50,38 @@ def create_app():
     # -----------------------------
     # CORS
     # -----------------------------
-    allowed_origins = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-
-        # Vercel frontend
-        "https://tech-quiz-ai-xi.vercel.app",
-    ]
+    def cors_origin_matcher(origin):
+        """
+        Dynamically match allowed CORS origins.
+        Allows localhost for dev, and all Vercel preview/production domains.
+        """
+        if not origin:
+            return False
+        
+        # Always allow localhost and 127.0.0.1 for development
+        if origin.startswith(('http://localhost:', 'http://127.0.0.1:')):
+            return True
+        
+        # Allow Vercel deployments (main and preview)
+        if origin.endswith('.vercel.app'):
+            return True
+        
+        # Environment variable override for custom domains
+        allowed_custom = os.getenv('CORS_ORIGINS', '').split(',')
+        if origin in allowed_custom:
+            return True
+        
+        return False
 
     CORS(
         app,
+        origins=cors_origin_matcher,
         resources={
             r"/api/*": {
-                "origins": allowed_origins,
                 "supports_credentials": True,
+                "allow_headers": ["Content-Type", "Authorization"],
+                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                "max_age": 3600,
             }
         }
     )
