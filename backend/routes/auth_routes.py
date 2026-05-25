@@ -6,6 +6,7 @@ import traceback
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
 @auth_bp.route('/signup', methods=['POST', 'OPTIONS'])
+@auth_bp.route('/register', methods=['POST', 'OPTIONS'])
 def signup():
     """User signup endpoint"""
     if request.method == 'OPTIONS':

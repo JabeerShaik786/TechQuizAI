@@ -2,13 +2,19 @@ import axios from "axios";
 import { useAuthStore } from "../store/index";
 
 // STRICT: API URL must be configured in environment
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_API_URL?.replace(/\/+$/, '');
+
+if (!apiUrl && import.meta.env.MODE === 'production') {
+  throw new Error(
+    'VITE_API_URL is not defined in production. Set it in Vercel environment variables to https://techquiz-backend-wclt.onrender.com/api'
+  );
+}
 
 // Log to console for debugging production issues
 console.log('🔌 API Base URL:', apiUrl || '❌ NOT SET - Login/Signup will fail');
 
 const API = axios.create({
-  baseURL: apiUrl,
+  baseURL: apiUrl || undefined,
   timeout: 30000,
   withCredentials: false,
   headers: {
@@ -99,7 +105,7 @@ API.interceptors.response.use(
 export const authService = {
   signup: async (data) => {
     try {
-      const response = await API.post("/auth/signup", data);
+      const response = await API.post('/auth/register', data);
       // Backend returns access_token, but we normalize to token for consistency
       return {
         data: {
@@ -184,6 +190,8 @@ export const authService = {
   getAIRecommendations: async () => {
     return API.get('/ai/recommendations')
   },
+
+  health: async () => API.get('/health'),
 };
 
 export const analyticsService = {

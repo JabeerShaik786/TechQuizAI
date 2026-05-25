@@ -1,11 +1,43 @@
 import { useAuthStore } from '../store/index'
 import { authService } from '../services/api'
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const ensureBackendAwake = async (attempts = 3, delayMs = 2000) => {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await authService.health()
+      return null
+    } catch (error) {
+      const retryText = attempt < attempts ? 'Retrying...' : 'Unable to reach backend.'
+      console.warn(`Backend health check failed (attempt ${attempt}):`, error, retryText)
+      if (attempt === attempts) {
+        const message =
+          error.userMessage ||
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          'Backend is unavailable. Please try again later.'
+        return `Server waking up or unreachable. ${message}`
+      }
+      await sleep(delayMs)
+    }
+  }
+  return 'Backend is unavailable. Please try again later.'
+}
+
 export const useAuthService = () => {
   const { login, logout, setUser, setToken } = useAuthStore()
 
   const handleLogin = async (email, password) => {
     try {
+      const wakeError = await ensureBackendAwake()
+      if (wakeError) {
+        return {
+          success: false,
+          error: wakeError,
+        }
+      }
+
       console.log('🔐 Attempting login with:', email)
       
       const response = await authService.login({
@@ -51,6 +83,14 @@ export const useAuthService = () => {
 
   const handleSignup = async (userData) => {
     try {
+      const wakeError = await ensureBackendAwake()
+      if (wakeError) {
+        return {
+          success: false,
+          error: wakeError,
+        }
+      }
+
       console.log('🆕 Attempting signup with:', userData.email)
       
       const response = await authService.signup(userData)

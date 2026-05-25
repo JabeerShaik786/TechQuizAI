@@ -62,7 +62,8 @@ def create_app():
                 "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
                 "max_age": 3600,
             }
-        }
+        },
+        supports_credentials=True,
     )
 
     # -----------------------------
