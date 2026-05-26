@@ -1,14 +1,31 @@
 import { motion } from 'framer-motion'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CheckCircle, XCircle, Trophy, Share2 } from 'lucide-react'
+import { useEffect } from 'react'
 import { useQuizStore, useStatsStore } from '../store/index'
 import { Button, GlassCard, SectionTitle } from '../components/UIComponents'
+import { analyticsService } from '../services/api'
 
 const Results = () => {
   const navigate = useNavigate()
   const { quizId } = useParams()
   const { currentQuiz, score, answers } = useQuizStore()
-  const { level } = useStatsStore()
+  const { level, setStats } = useStatsStore()
+
+  useEffect(() => {
+    // Refresh analytics after quiz completion
+    const refreshAnalytics = async () => {
+      try {
+        const response = await analyticsService.getStats()
+        if (response.data.stats) {
+          setStats(response.data.stats)
+        }
+      } catch (error) {
+        console.warn('Failed to refresh analytics after quiz:', error)
+      }
+    }
+    refreshAnalytics()
+  }, [setStats])
 
   if (!currentQuiz || score === undefined) {
     return (

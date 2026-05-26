@@ -16,6 +16,8 @@ import {
   useStatsStore,
 } from '../store/index'
 
+import { quizService } from '../services/api'
+
 import {
   Button,
   GlassCard,
@@ -113,25 +115,19 @@ const Quiz = () => {
     setAnswered(true)
   }
 
-  const handleNext = () => {
+  const handleSkip = () => {
+    // Mark as skipped (don't add answer)
     if (currentQuestion < quizQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1)
       setSelectedAnswer('')
       setAnswered(false)
     } else {
+      // If last question, submit quiz
       handleSubmitQuiz()
     }
   }
 
-  const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1)
-      setSelectedAnswer('')
-      setAnswered(false)
-    }
-  }
-
-  const handleSubmitQuiz = () => {
+  const handleSubmitQuiz = async () => {
     let correctCount = 0
 
     quizQuestions.forEach((q) => {
@@ -152,6 +148,14 @@ const Quiz = () => {
     const stats = useStatsStore.getState()
     stats.addQuiz(currentQuiz.topic || 'Python', score)
     stats.addXP(score)
+
+    // Submit quiz to backend
+    try {
+      const response = await quizService.submit(currentQuiz.id, answers)
+      console.debug('Quiz submitted to backend:', response)
+    } catch (error) {
+      console.warn('Backend submission failed, continuing with local state:', error)
+    }
 
     navigate(`/results/${currentQuiz.id || 1}`)
   }
@@ -406,6 +410,7 @@ const Quiz = () => {
           </Button>
 
           <Button
+            onClick={handleSkip}
             variant="secondary"
             size="lg"
             icon={SkipForward}

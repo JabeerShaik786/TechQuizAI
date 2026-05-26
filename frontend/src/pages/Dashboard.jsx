@@ -119,7 +119,7 @@ const Dashboard = () => {
   ]
 
   return (
-    <div className="min-h-screen w-full flex flex-col relative">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#020617]">
       {/* Floating background elements */}
       <div className="fixed inset-0 pointer-events-none">
         <motion.div

@@ -201,4 +201,11 @@ export const analyticsService = {
   getLeaderboard: async (limit = 10) => API.get(`/analytics/leaderboard?limit=${limit}`),
 };
 
+
+export const quizService = {
+  submit: async (quizId, answers) => API.post(`/quiz/submit`, { quiz_id: quizId, answers }),
+  getHistory: async () => API.get('/quiz/history'),
+  getQuiz: async (quizId) => API.get(`/quiz/${quizId}`),
+};
+
 export default API;
