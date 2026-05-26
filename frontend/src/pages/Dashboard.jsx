@@ -76,7 +76,13 @@ const Dashboard = () => {
         setStats(stats)
       } catch (error) {
         console.error('Dashboard stats load failed:', error)
-        setDashboardError(error.userMessage || error.response?.data?.error || error.message || 'Unable to load dashboard stats')
+        // Only show error if it's not a 404 (new users should see empty state, not error)
+        if (error.response?.status !== 404) {
+          setDashboardError(error.userMessage || error.response?.data?.error || error.message || 'Unable to load dashboard stats')
+        } else {
+          // New user - show empty state, not error
+          setDashboardError(null)
+        }
       } finally {
         setLoadingStats(false)
       }
@@ -119,9 +125,9 @@ const Dashboard = () => {
   ]
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-[#020617]">
-      {/* Floating background elements */}
-      <div className="fixed inset-0 pointer-events-none">
+    <div className="w-full overflow-x-hidden bg-[#020617]">
+      {/* Floating background elements - fixed positioning doesn't affect layout */}
+      <div className="fixed inset-0 pointer-events-none z-0">
         <motion.div
           className="absolute top-20 right-10 w-96 h-96 rounded-full bg-cyan-500/5 blur-3xl"
           animate={{ y: [0, 50, 0], x: [0, 30, 0] }}
@@ -135,7 +141,7 @@ const Dashboard = () => {
       </div>
 
       {/* Main content */}
-      <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 lg:py-16 relative z-10">
+      <div className="relative z-10 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 lg:py-16">
 
         {/* ==================== HERO SECTION ==================== */}
 

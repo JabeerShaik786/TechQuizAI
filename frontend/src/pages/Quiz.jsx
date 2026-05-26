@@ -146,15 +146,28 @@ const Quiz = () => {
     setScore(score)
 
     const stats = useStatsStore.getState()
-    stats.addQuiz(currentQuiz.topic || 'Python', score)
-    stats.addXP(score)
-
-    // Submit quiz to backend
+    
+    // Submit quiz to backend and get updated user stats
     try {
       const response = await quizService.submit(currentQuiz.id, answers)
       console.debug('Quiz submitted to backend:', response)
+      
+      // Update store with returned user stats for immediate reflection
+      if (response.data?.user) {
+        const userData = response.data.user
+        stats.setStats({
+          xp: userData.xp,
+          level: userData.level,
+          streak: userData.streak,
+          quizzesCompleted: userData.quizzes_completed,
+          averageAccuracy: response.data.accuracy || 0,
+        })
+      }
     } catch (error) {
-      console.warn('Backend submission failed, continuing with local state:', error)
+      console.warn('Backend submission failed:', error)
+      // Fallback: update with local calculation
+      stats.addQuiz(currentQuiz.topic || 'Python', score)
+      stats.addXP(score)
     }
 
     navigate(`/results/${currentQuiz.id || 1}`)

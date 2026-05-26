@@ -144,7 +144,13 @@ class QuizService:
             'accuracy': accuracy,
             'xp_earned': xp_earned,
             'correct_answers': correct_count,
-            'total_questions': total_questions
+            'total_questions': total_questions,
+            'user': {
+                'xp': user.xp,
+                'level': user.level,
+                'streak': user.streak,
+                'quizzes_completed': len(Quiz.query.filter_by(user_id=user_id, completed=True).all())
+            }
         }, 200
     
     @staticmethod

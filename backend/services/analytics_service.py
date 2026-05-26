@@ -5,10 +5,19 @@ from extensions import db
 class AnalyticsService:
     @staticmethod
     def get_user_stats(user_id):
-        """Get user statistics"""
+        """Get user statistics - returns 0/empty stats for new users instead of error"""
         user = User.query.get(user_id)
         if not user:
-            return {'error': 'User not found'}, 404
+            # Return empty stats instead of 404 for better UX
+            return {
+                'stats': {
+                    'xp': 0,
+                    'level': 1,
+                    'streak': 0,
+                    'quizzes_completed': 0,
+                    'average_accuracy': 0,
+                }
+            }, 200
 
         quizzes = Quiz.query.filter_by(user_id=user_id, completed=True).all()
         total_questions = sum((quiz.questions_count or 0) for quiz in quizzes)
