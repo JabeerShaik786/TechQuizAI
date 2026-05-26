@@ -1,5 +1,5 @@
-import { useAuthStore } from '../store/index'
-import { authService } from '../services/api'
+import { useAuthStore, useStatsStore } from '../store/index'
+import { authService, analyticsService } from '../services/api'
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -26,7 +26,8 @@ const ensureBackendAwake = async (attempts = 3, delayMs = 2000) => {
 }
 
 export const useAuthService = () => {
-  const { login, logout, setUser, setToken } = useAuthStore()
+  const { login, logout } = useAuthStore()
+  const { setStats } = useStatsStore()
 
   const handleLogin = async (email, password) => {
     try {
@@ -55,6 +56,13 @@ export const useAuthService = () => {
 
       // Update Zustand store with user and token
       login(user, token)
+
+      try {
+        const statsResponse = await analyticsService.getStats()
+        setStats(statsResponse.data.stats)
+      } catch (statsError) {
+        console.warn('Unable to hydrate stats after auth:', statsError)
+      }
       
       console.log('✅ Auth store updated:', { user, token: token.substring(0, 20) + '...' })
 
@@ -105,6 +113,13 @@ export const useAuthService = () => {
 
       // Update Zustand store with user and token
       login(user, token)
+
+      try {
+        const statsResponse = await analyticsService.getStats()
+        setStats(statsResponse.data.stats)
+      } catch (statsError) {
+        console.warn('Unable to hydrate stats after auth:', statsError)
+      }
       
       console.log('✅ Auth store updated:', { user, token: token.substring(0, 20) + '...' })
 

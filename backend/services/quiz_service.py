@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from models import Quiz, Question, UserStat, User, Badge
 from extensions import db
 import json
@@ -100,12 +101,31 @@ class QuizService:
         user.xp += xp_earned
         user.level = (user.xp // 1000) + 1
         
-        # Update topic stats
+        today = datetime.utcnow().date()
+        if user.last_quiz_date:
+            last_date = user.last_quiz_date
+            if isinstance(last_date, datetime):
+                last_date = last_date.date()
+        else:
+            last_date = None
+
+        if last_date == today:
+            # Same-day quiz does not increase the streak again
+            pass
+        elif last_date == today - timedelta(days=1):
+            user.streak = max(user.streak, 0) + 1
+        else:
+            user.streak = 1
+
+        user.last_quiz_date = today
+
+        # Update topic stats using weighted average
         stat = UserStat.query.filter_by(user_id=user_id, topic=quiz.topic).first()
         if stat:
-            stat.accuracy = (stat.accuracy + accuracy) / 2
+            previous_total_accuracy = stat.accuracy * stat.quizzes_completed
             stat.quizzes_completed += 1
             stat.total_xp += xp_earned
+            stat.accuracy = (previous_total_accuracy + accuracy) / stat.quizzes_completed
         else:
             stat = UserStat(
                 user_id=user_id,

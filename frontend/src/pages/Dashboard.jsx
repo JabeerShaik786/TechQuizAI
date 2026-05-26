@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -17,6 +18,7 @@ import {
   useStatsStore,
   useAuthStore,
 } from '../store/index'
+import { analyticsService } from '../services/api'
 
 import {
   GlassCard,
@@ -41,43 +43,68 @@ import {
 const Dashboard = () => {
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  const {
-    xp,
-    level,
-    streak,
-    quizzesCompleted,
-    totalAccuracy,
-    badges,
-  } = useStatsStore()
+  const { setStats } = useStatsStore()
+
+  const [dashboardStats, setDashboardStats] = useState({
+    xp: 0,
+    level: 1,
+    streak: 0,
+    quizzesCompleted: 0,
+    averageAccuracy: 0,
+  })
+  const [loadingStats, setLoadingStats] = useState(true)
+  const [dashboardError, setDashboardError] = useState(null)
+
+  useEffect(() => {
+    const loadStats = async () => {
+      setLoadingStats(true)
+      setDashboardError(null)
+
+      try {
+        const response = await analyticsService.getStats()
+        const stats = response.data.stats || {}
+        setDashboardStats({
+          xp: stats.xp ?? 0,
+          level: stats.level ?? 1,
+          streak: stats.streak ?? 0,
+          quizzesCompleted: stats.quizzes_completed ?? 0,
+          averageAccuracy: stats.average_accuracy ?? 0,
+        })
+        setStats(stats)
+      } catch (error) {
+        setDashboardError(error.userMessage || error.response?.data?.error || error.message || 'Unable to load dashboard stats')
+      } finally {
+        setLoadingStats(false)
+      }
+    }
+
+    loadStats()
+  }, [setStats])
 
   const stats = [
     {
       icon: Zap,
       label: 'XP Points',
-      value: xp.toLocaleString(),
+      value: dashboardStats.xp.toLocaleString(),
       color: 'cyan',
-      trend: '12',
     },
     {
       icon: TrendingUp,
       label: 'Level',
-      value: level,
+      value: dashboardStats.level,
       color: 'purple',
-      trend: '5',
     },
     {
       icon: Book,
       label: 'Quizzes',
-      value: quizzesCompleted,
+      value: dashboardStats.quizzesCompleted,
       color: 'pink',
-      trend: '8',
     },
     {
       icon: Award,
       label: 'Accuracy',
-      value: `${totalAccuracy.toFixed(1)}%`,
+      value: `${dashboardStats.averageAccuracy.toFixed(1)}%`,
       color: 'green',
-      trend: '2',
     },
   ]
 
@@ -159,6 +186,12 @@ const Dashboard = () => {
 
         {/* ==================== STATS GRID ==================== */}
 
+        {dashboardError && (
+          <div className="mb-6 rounded-3xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
+            {dashboardError}
+          </div>
+        )}
+
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -179,6 +212,23 @@ const Dashboard = () => {
         </motion.div>
 
         {/* ==================== MAIN GRID ==================== */}
+
+        {!loadingStats && dashboardStats.quizzesCompleted === 0 && (
+          <div className="mb-10 rounded-3xl border border-white/10 bg-white/5 p-8 text-center">
+            <p className="text-sm uppercase tracking-[0.3em] text-cyberpunk-secondary mb-4">No quiz activity yet</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Start your first quiz and earn XP</h2>
+            <p className="text-cyberpunk-secondary max-w-2xl mx-auto mb-8">
+              Your dashboard will grow as you complete quizzes, earn XP, and build real analytics from your learning journey.
+            </p>
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => navigate('/topics')}
+            >
+              Select a Topic
+            </Button>
+          </div>
+        )}
 
         <motion.div
           variants={containerVariants}

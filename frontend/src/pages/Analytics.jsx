@@ -55,16 +55,6 @@ const Analytics = () => {
         accuracy: Math.round((accuracy / 100) * 10) / 10 || 0,
       }))
 
-  const fallbackWeeklyData = [
-    { day: 'Mon', xp: 120, quizzes: 2 },
-    { day: 'Tue', xp: 150, quizzes: 3 },
-    { day: 'Wed', xp: 180, quizzes: 2 },
-    { day: 'Thu', xp: 200, quizzes: 4 },
-    { day: 'Fri', xp: 160, quizzes: 2 },
-    { day: 'Sat', xp: 220, quizzes: 3 },
-    { day: 'Sun', xp: 190, quizzes: 2 },
-  ]
-
   return (
     <div className="p-4 md:p-8">
       <SectionTitle>Your Analytics</SectionTitle>
@@ -116,22 +106,28 @@ const Analytics = () => {
             <p className="text-sm text-cyberpunk-text-secondary">Tracked over the last 7 days</p>
           </div>
           <div className="mt-6 h-[320px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={weeklyData.length ? weeklyData : fallbackWeeklyData}>
-                <CartesianGrid stroke="rgba(0, 245, 255, 0.1)" />
-                <XAxis dataKey="day" stroke="rgba(148, 163, 184, 0.5)" />
-                <YAxis stroke="rgba(148, 163, 184, 0.5)" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-                    border: '1px solid rgba(0, 245, 255, 0.3)',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Legend />
-                <Line type="monotone" dataKey="xp" stroke="#00F5FF" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
+            {weeklyData.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={weeklyData}>
+                  <CartesianGrid stroke="rgba(0, 245, 255, 0.1)" />
+                  <XAxis dataKey="day" stroke="rgba(148, 163, 184, 0.5)" />
+                  <YAxis stroke="rgba(148, 163, 184, 0.5)" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                      border: '1px solid rgba(0, 245, 255, 0.3)',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="xp" stroke="#00F5FF" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center text-cyberpunk-secondary">
+                {loading ? 'Loading weekly activity…' : 'No quiz activity yet. Complete a quiz to see weekly progress.'}
+              </div>
+            )}
           </div>
         </GlassCard>
       </motion.div>
@@ -167,20 +163,20 @@ const Analytics = () => {
         <GlassCard>
           <h3 className="text-2xl font-bold mb-6">Skills Radar</h3>
           <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={formattedTopicData.length ? formattedTopicData.slice(0, 5).map((item) => ({ skill: item.topic, value: item.accuracy })) : [
-                { skill: 'Python', value: 85 },
-                { skill: 'AI/ML', value: 72 },
-                { skill: 'Web Dev', value: 88 },
-                { skill: 'Security', value: 65 },
-                { skill: 'Database', value: 78 },
-              ]}>
-                <PolarGrid stroke="rgba(0, 245, 255, 0.2)" />
-                <PolarAngleAxis dataKey="skill" stroke="rgba(148, 163, 184, 0.5)" />
-                <PolarRadiusAxis stroke="rgba(148, 163, 184, 0.5)" />
-                <Radar name="Proficiency" dataKey="value" stroke="#00F5FF" fill="#00F5FF" fillOpacity={0.2} />
-              </RadarChart>
-            </ResponsiveContainer>
+            {formattedTopicData.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={formattedTopicData.slice(0, 5).map((item) => ({ skill: item.topic, value: item.accuracy }))}>
+                  <PolarGrid stroke="rgba(0, 245, 255, 0.2)" />
+                  <PolarAngleAxis dataKey="skill" stroke="rgba(148, 163, 184, 0.5)" />
+                  <PolarRadiusAxis stroke="rgba(148, 163, 184, 0.5)" />
+                  <Radar name="Proficiency" dataKey="value" stroke="#00F5FF" fill="#00F5FF" fillOpacity={0.2} />
+                </RadarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center text-cyberpunk-secondary">
+                {loading ? 'Loading skills radar…' : 'No topic data yet. Complete a quiz to unlock analytics.'}
+              </div>
+            )}
           </div>
         </GlassCard>
       </motion.div>

@@ -157,6 +157,15 @@ export const useStatsStore = create(
           history: [entry, ...state.history].slice(0, 50),
         })),
 
+      setStats: (stats) =>
+        set({
+          xp: stats.xp ?? 0,
+          level: stats.level ?? 1,
+          streak: stats.streak ?? 0,
+          quizzesCompleted: stats.quizzes_completed ?? 0,
+          totalAccuracy: stats.average_accuracy ?? 0,
+        }),
+
       resetAllStats: () =>
         set({
           xp: 0,

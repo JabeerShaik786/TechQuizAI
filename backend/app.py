@@ -8,6 +8,7 @@ try:
 except ImportError:
     Migrate = None
 
+from sqlalchemy import inspect
 from config import config
 from extensions import db, jwt
 
@@ -79,6 +80,16 @@ def create_app():
     # -----------------------------
     with app.app_context():
         db.create_all()
+
+        try:
+            inspector = inspect(db.engine)
+            if 'users' in inspector.get_table_names():
+                columns = [column['name'] for column in inspector.get_columns('users')]
+                if 'last_quiz_date' not in columns:
+                    db.session.execute('ALTER TABLE users ADD COLUMN last_quiz_date DATE')
+                    db.session.commit()
+        except Exception as exc:
+            print('Schema migration warning:', str(exc))
 
     # -----------------------------
     # HEALTH ROUTE

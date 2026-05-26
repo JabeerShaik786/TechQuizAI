@@ -18,6 +18,7 @@ class User(db.Model):
     streak = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_quiz_date = db.Column(db.Date, nullable=True)
     
     quizzes = db.relationship('Quiz', backref='user', lazy=True, cascade='all, delete-orphan')
     stats = db.relationship('UserStat', backref='user', lazy=True, cascade='all, delete-orphan')
@@ -43,6 +44,7 @@ class User(db.Model):
             'xp': self.xp,
             'level': self.level,
             'streak': self.streak,
+            'last_quiz_date': self.last_quiz_date.isoformat() if self.last_quiz_date else None,
             'created_at': self.created_at.isoformat(),
             'joinedAt': self.created_at.isoformat()
         }
