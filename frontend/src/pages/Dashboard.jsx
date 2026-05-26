@@ -43,7 +43,7 @@ import {
 const Dashboard = () => {
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  const { setStats } = useStatsStore()
+  const { setStats, badges } = useStatsStore()
 
   const [dashboardStats, setDashboardStats] = useState({
     xp: 0,
@@ -55,6 +55,8 @@ const Dashboard = () => {
   const [loadingStats, setLoadingStats] = useState(true)
   const [dashboardError, setDashboardError] = useState(null)
 
+  const { xp, level, streak, quizzesCompleted, averageAccuracy } = dashboardStats
+
   useEffect(() => {
     const loadStats = async () => {
       setLoadingStats(true)
@@ -62,6 +64,7 @@ const Dashboard = () => {
 
       try {
         const response = await analyticsService.getStats()
+        console.debug('Dashboard analytics response:', response)
         const stats = response.data.stats || {}
         setDashboardStats({
           xp: stats.xp ?? 0,
@@ -72,6 +75,7 @@ const Dashboard = () => {
         })
         setStats(stats)
       } catch (error) {
+        console.error('Dashboard stats load failed:', error)
         setDashboardError(error.userMessage || error.response?.data?.error || error.message || 'Unable to load dashboard stats')
       } finally {
         setLoadingStats(false)

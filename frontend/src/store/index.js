@@ -21,9 +21,11 @@ export const useAuthStore = create(
       user: null,
       token: null,
       isAuthenticated: false,
+      isHydrated: false,
 
       setUser: (user) => set({ user }),
       setToken: (token) => set({ token }),
+      setHydrated: (value) => set({ isHydrated: !!value }),
 
       login: (user, token) => {
         const profile = {
@@ -82,6 +84,14 @@ export const useAuthStore = create(
     {
       name: 'auth-storage',
       storage: localJSONStorage,
+      onRehydrateStorage: () => (state) => {
+        if (state?.setHydrated) {
+          state.setHydrated(true)
+        } else {
+          // If no persisted state exists, mark hydration complete.
+          set({ isHydrated: true })
+        }
+      },
     }
   )
 )

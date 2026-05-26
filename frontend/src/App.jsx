@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { useAuthStore, useSettingsStore } from './store/index'
+import ErrorBoundary from './components/ErrorBoundary'
 
 // Layouts
 import MainLayout from './layouts/MainLayout'
@@ -20,13 +21,27 @@ import Analytics from './pages/Analytics'
 import Profile from './pages/Profile'
 import AI from './pages/AI'
 
+const AuthLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-[#020617] text-white px-4">
+    <div className="text-center">
+      <div className="mb-4 h-12 w-12 rounded-full border-4 border-cyan-400 border-t-transparent animate-spin mx-auto" />
+      <p className="text-lg font-semibold">Checking authentication...</p>
+    </div>
+  </div>
+)
+
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuthStore()
-  
-  if (!isAuthenticated) {
+  const { isAuthenticated, isHydrated, user } = useAuthStore()
+  console.debug('ProtectedRoute auth state:', { isAuthenticated, isHydrated, user })
+
+  if (!isHydrated) {
+    return <AuthLoader />
+  }
+
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />
   }
-  
+
   return children
 }
 
@@ -52,8 +67,9 @@ function App() {
         pauseOnHover
         theme={darkMode ? 'dark' : 'light'}
       />
-      
-      <Routes>
+
+      <ErrorBoundary>
+        <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -151,6 +167,7 @@ function App() {
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </ErrorBoundary>
     </Router>
   )
 }
