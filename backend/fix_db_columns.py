@@ -60,6 +60,9 @@ def main():
             if not column_exists(conn, "users", "avatar_filename"):
                 conn.execute("ALTER TABLE users ADD COLUMN avatar_filename VARCHAR(255)")
 
+            if not column_exists(conn, "users", "last_quiz_date"):
+                conn.execute("ALTER TABLE users ADD COLUMN last_quiz_date DATE")
+
     except sqlite3.OperationalError as e:
         raise RuntimeError(
             f"SQLite schema fix failed. DB={db_path}. Error={e}"
@@ -67,7 +70,7 @@ def main():
     finally:
         conn.close()
 
-    print(f"DB schema check complete: avatar/avatar_filename columns are present. DB={db_path}")
+    print(f"DB schema check complete: avatar/avatar_filename/last_quiz_date columns are present. DB={db_path}")
 
 
 if __name__ == "__main__":

@@ -72,18 +72,31 @@ const Quiz = () => {
   } = useQuizStore()
 
   const [timeLeft, setTimeLeft] = useState(600)
-  const [answered, setAnswered] = useState(false)
 
+  // Safe question retrieval with validation
   const quizQuestions =
-    currentQuiz?.questions?.length > 0
+    currentQuiz?.questions && Array.isArray(currentQuiz.questions) && currentQuiz.questions.length > 0
       ? currentQuiz.questions
       : fallbackQuestions
 
-  const question = quizQuestions[currentQuestion]
+  // Ensure currentQuestion doesn't exceed quiz length
+  const safeCurrentQuestion = Math.min(currentQuestion, quizQuestions.length - 1)
+  const question = quizQuestions[safeCurrentQuestion]
 
-  const [selectedAnswer, setSelectedAnswer] = useState(
-    answers[question?.id]?.toString() || ''
-  )
+  const [selectedAnswer, setSelectedAnswer] = useState('')
+  const [answered, setAnswered] = useState(false)
+
+  useEffect(() => {
+    if (!question?.id) {
+      setSelectedAnswer('')
+      setAnswered(false)
+      return
+    }
+
+    const storedAnswer = answers[question.id]
+    setSelectedAnswer(storedAnswer !== undefined ? storedAnswer.toString() : '')
+    setAnswered(storedAnswer !== undefined)
+  }, [question?.id, answers, currentQuestion])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -99,6 +112,7 @@ const Quiz = () => {
     return () => clearInterval(timer)
   }, [])
 
+  // Safety check - ensure we have valid data
   if (!currentQuiz) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -107,18 +121,55 @@ const Quiz = () => {
     )
   }
 
-  const progress = ((currentQuestion + 1) / quizQuestions.length) * 100
+  if (!question) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <GlassCard className="text-center p-10 max-w-lg">
+          <p className="text-xl text-cyberpunk-secondary mb-6">
+            Unable to load quiz questions. Please try again.
+          </p>
+          <Button
+            onClick={() => navigate('/topic-selection')}
+            variant="primary"
+          >
+            Return to Topics
+          </Button>
+        </GlassCard>
+      </div>
+    )
+  }
+
+  const progress = ((safeCurrentQuestion + 1) / quizQuestions.length) * 100
 
   const handleSelectAnswer = (index) => {
+    if (!question?.id) {
+      console.error('Question ID missing, cannot select answer')
+      return
+    }
     setSelectedAnswer(index.toString())
     addAnswer(question.id, index)
     setAnswered(true)
   }
 
+  const handlePrevious = () => {
+    if (safeCurrentQuestion > 0) {
+      setCurrentQuestion(safeCurrentQuestion - 1)
+    }
+  }
+
+  const handleNext = () => {
+    if (safeCurrentQuestion < quizQuestions.length - 1) {
+      setCurrentQuestion(safeCurrentQuestion + 1)
+      return
+    }
+
+    handleSubmitQuiz()
+  }
+
   const handleSkip = () => {
     // Mark as skipped (don't add answer)
-    if (currentQuestion < quizQuestions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1)
+    if (safeCurrentQuestion < quizQuestions.length - 1) {
+      setCurrentQuestion(safeCurrentQuestion + 1)
       setSelectedAnswer('')
       setAnswered(false)
     } else {

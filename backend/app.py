@@ -8,7 +8,7 @@ try:
 except ImportError:
     Migrate = None
 
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from config import config
 from extensions import db, jwt
 
@@ -86,7 +86,7 @@ def create_app():
             if 'users' in inspector.get_table_names():
                 columns = [column['name'] for column in inspector.get_columns('users')]
                 if 'last_quiz_date' not in columns:
-                    db.session.execute('ALTER TABLE users ADD COLUMN last_quiz_date DATE')
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_quiz_date DATE"))
                     db.session.commit()
         except Exception as exc:
             print('Schema migration warning:', str(exc))

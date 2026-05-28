@@ -8,11 +8,13 @@ import {
 } from 'lucide-react'
 
 import { useQuizStore } from '../store/index'
+import { useToast } from '../hooks/useToast'
 
 import {
   GlassCard,
   Button,
   SectionTitle,
+  ToastContainer,
 } from '../components/UIComponents'
 
 import {
@@ -30,6 +32,7 @@ import advancedQuizDatabase, {
 // ============================================================================
 const QuizGenerator = () => {
   const navigate = useNavigate()
+  const { toasts, showToast } = useToast()
 
   // ========== STATE MANAGEMENT ==========
   const [difficulty, setDifficulty] = useState('mixed')
@@ -100,7 +103,7 @@ const QuizGenerator = () => {
       const questions = engine.generateQuiz()
 
       if (questions.length === 0) {
-        alert('No questions available for this topic with selected difficulty')
+        showToast('No questions available for this topic with selected difficulty', 'warning')
         setIsGenerating(false)
         return
       }
@@ -110,6 +113,10 @@ const QuizGenerator = () => {
         console.warn(
           `Requested ${questionCount} questions, but only ${questions.length} unique questions available`
         )
+        showToast(
+          `Only ${questions.length} questions available for this configuration`,
+          'info'
+        )
       }
 
       // Track used questions in this session
@@ -118,23 +125,47 @@ const QuizGenerator = () => {
       sessionStorage.setItem('usedQuestionIds', JSON.stringify(usedIds))
       setSessionUsedQuestions(new Set(usedIds))
 
-      // Create quiz object
+      // Create quiz object with validation
       const quiz = {
         id: Date.now(),
-        topic: currentQuiz.topic,
-        difficulty: difficulty,
-        questionCount: questions.length,
-        questions: questions,
+        topic: currentQuiz.topic || 'Python',
+        difficulty: difficulty || 'mixed',
+        questionCount: questions.length || 0,
+        questions: Array.isArray(questions) ? questions : [],
         createdAt: new Date(),
+      }
+
+      // Validate quiz object before storing
+      if (!quiz.questions || quiz.questions.length === 0) {
+        showToast('Failed to generate quiz. No questions available.', 'error')
+        setIsGenerating(false)
+        return
+      }
+
+      // Ensure each question has required fields
+      const allQuestionsValid = quiz.questions.every(q =>
+        q.id &&
+        q.question &&
+        Array.isArray(q.options) &&
+        q.options.length > 0 &&
+        (q.correctAnswer !== null && q.correctAnswer !== undefined)
+      )
+
+      if (!allQuestionsValid) {
+        console.error('Invalid question structure detected:', quiz.questions)
+        showToast('Quiz contains invalid questions. Please try again.', 'error')
+        setIsGenerating(false)
+        return
       }
 
       // Update store and navigate
       setCurrentQuiz(quiz)
       setIsGenerating(false)
+      showToast(`Quiz ready with ${questions.length} questions!`, 'success')
       navigate('/quiz')
     } catch (error) {
       console.error('Error generating quiz:', error)
-      alert('Error generating quiz. Please try again.')
+      showToast('Error generating quiz. Please try again.', 'error')
       setIsGenerating(false)
     }
   }
@@ -346,6 +377,8 @@ const QuizGenerator = () => {
           </motion.div>
         </motion.div>
       </div>
+
+      <ToastContainer toasts={toasts} />
     </div>
   )
 }

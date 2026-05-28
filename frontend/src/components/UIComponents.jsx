@@ -571,3 +571,57 @@ export const HolographicCard = ({
     </motion.div>
   )
 }
+
+/* ==================== TOAST NOTIFICATION ==================== */
+
+export const Toast = ({
+  message = '',
+  type = 'info',
+  onClose = () => {},
+  duration = 4000,
+}) => {
+  const bgColorMap = {
+    success: 'bg-green-500/90',
+    error: 'bg-red-500/90',
+    warning: 'bg-yellow-500/90',
+    info: 'bg-blue-500/90',
+  }
+
+  const textColorMap = {
+    success: 'text-green-100',
+    error: 'text-red-100',
+    warning: 'text-yellow-100',
+    info: 'text-blue-100',
+  }
+
+  const bgColor = bgColorMap[type] || bgColorMap.info
+  const textColor = textColorMap[type] || textColorMap.info
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className={`${bgColor} ${textColor} px-6 py-3 rounded-lg backdrop-blur-md border border-white/20 shadow-2xl max-w-sm`}
+    >
+      <p className="text-sm font-medium">{message}</p>
+    </motion.div>
+  )
+}
+
+/* ==================== TOAST CONTAINER (USE WITH STATE) ==================== */
+
+export const ToastContainer = ({ toasts = [] }) => {
+  return (
+    <div className="fixed top-4 right-4 z-50 space-y-2 pointer-events-auto">
+      {toasts && toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={toast.onClose}
+        />
+      ))}
+    </div>
+  )
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+export { useToast } from './useToast'
 
 export const useLocalStorage = (key, initialValue) => {
   const [storedValue, setStoredValue] = useState(() => {
