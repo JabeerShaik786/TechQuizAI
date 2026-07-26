@@ -224,19 +224,21 @@ const Dashboard = () => {
         {/* ==================== MAIN GRID ==================== */}
 
         {!loadingStats && dashboardStats.quizzesCompleted === 0 && (
-          <div className="mb-10 rounded-3xl border border-white/10 bg-white/5 p-8 text-center">
+          <div className="mb-10 rounded-3xl border border-white/10 bg-white/5 p-8 text-center flex flex-col items-center justify-center">
             <p className="text-sm uppercase tracking-[0.3em] text-cyberpunk-secondary mb-4">No quiz activity yet</p>
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Start your first quiz and earn XP</h2>
             <p className="text-cyberpunk-secondary max-w-2xl mx-auto mb-8">
               Your dashboard will grow as you complete quizzes, earn XP, and build real analytics from your learning journey.
             </p>
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => navigate('/topics')}
-            >
-              Select a Topic
-            </Button>
+            <div className="flex justify-center">
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => navigate('/topics')}
+              >
+                Select a Topic
+              </Button>
+            </div>
           </div>
         )}
 

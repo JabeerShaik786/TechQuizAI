@@ -6,11 +6,27 @@ import Sidebar from '../components/Sidebar'
 
 const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    return localStorage.getItem('sidebar-collapsed') === 'true'
+  })
   const { darkMode } = useSettingsStore()
+
+  const handleToggleCollapse = () => {
+    setIsCollapsed((prev) => {
+      const nextVal = !prev
+      localStorage.setItem('sidebar-collapsed', String(nextVal))
+      return nextVal
+    })
+  }
 
   return (
     <div className={`min-h-screen w-full overflow-x-hidden bg-[#020617] md:flex ${darkMode ? 'text-white' : 'text-slate-100'}`}>
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
+        isCollapsed={isCollapsed}
+        onToggleCollapse={handleToggleCollapse}
+      />
 
       <div className="min-h-screen flex flex-col flex-1 min-w-0">
         <NavBar onMenuClick={() => setSidebarOpen(true)} />
