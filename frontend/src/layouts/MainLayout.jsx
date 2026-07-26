@@ -9,7 +9,7 @@ const MainLayout = ({ children }) => {
   const { darkMode } = useSettingsStore()
 
   return (
-    <div className={`min-h-screen w-full overflow-x-hidden bg-[#020617] ${darkMode ? 'text-white' : 'text-slate-100'}`}>
+    <div className={`min-h-screen w-full overflow-x-hidden bg-[#020617] md:flex ${darkMode ? 'text-white' : 'text-slate-100'}`}>
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="min-h-screen flex flex-col w-full">

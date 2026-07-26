@@ -48,11 +48,11 @@ const Analytics = () => {
   const formattedTopicData = topicData.length
     ? topicData.map((topic) => ({
         ...topic,
-        accuracy: Number(topic.accuracy.toFixed ? topic.accuracy.toFixed(1) : topic.accuracy),
+        accuracy: Number(topic.accuracy?.toFixed ? topic.accuracy.toFixed(1) : (topic.accuracy ?? 0)),
       }))
-    : Object.entries(topicPerformance).map(([topic, accuracy]) => ({
+    : Object.entries(topicPerformance || {}).map(([topic, accuracy]) => ({
         topic,
-        accuracy: Math.round((accuracy / 100) * 10) / 10 || 0,
+        accuracy: Math.round(((accuracy ?? 0) / 100) * 10) / 10 || 0,
       }))
 
   return (

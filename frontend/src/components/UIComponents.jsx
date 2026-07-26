@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion'
+import { useEffect, useRef } from 'react'
+import { motion, animate } from 'framer-motion'
 import { Sparkles, ArrowRight, Zap } from 'lucide-react'
 import {
   hoverGlowVariants,
@@ -485,25 +486,32 @@ export const AnimatedCounter = ({
   prefix = '',
   className = '',
 }) => {
+  const nodeRef = useRef(null)
+
+  useEffect(() => {
+    const node = nodeRef.current
+    if (!node) return
+
+    const controls = animate(from, to, {
+      duration,
+      ease: 'easeOut',
+      onUpdate(value) {
+        node.textContent = `${prefix}${Math.floor(value)}${suffix}`
+      },
+    })
+
+    return () => controls.stop()
+  }, [from, to, duration, prefix, suffix])
+
   return (
     <motion.span
+      ref={nodeRef}
       className={className}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <motion.span
-        from={{ value: from }}
-        to={{ value: to }}
-        transition={{ duration, ease: 'easeOut' }}
-        children={({ value }) => (
-          <span>
-            {prefix}
-            {Math.floor(value.get())}
-            {suffix}
-          </span>
-        )}
-      />
+      {prefix}{from}{suffix}
     </motion.span>
   )
 }
