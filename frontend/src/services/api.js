@@ -203,6 +203,8 @@ export const analyticsService = {
 
 
 export const quizService = {
+  generate: async (topic, difficulty, questionCount) => 
+    API.post('/quiz/generate', { topic, difficulty, question_count: questionCount }),
   submit: async (quizId, answers) => API.post(`/quiz/submit`, { quiz_id: quizId, answers }),
   getHistory: async () => API.get('/quiz/history'),
   getQuiz: async (quizId) => API.get(`/quiz/${quizId}`),

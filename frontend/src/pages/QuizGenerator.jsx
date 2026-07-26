@@ -9,6 +9,7 @@ import {
 
 import { useQuizStore } from '../store/index'
 import { useToast } from '../hooks/useToast'
+import { quizService } from '../services/api'
 
 import {
   GlassCard,
@@ -22,13 +23,11 @@ import {
   itemVariants,
 } from '../animations/variants'
 
-// Import professional quiz database and randomization engine
-import advancedQuizDatabase, {
-  QuizEngine,
-} from '../data/advancedQuizDatabase'
+// Import professional quiz database for local range boundary checks
+import advancedQuizDatabase from '../data/advancedQuizDatabase'
 
 // ============================================================================
-// QUIZ GENERATOR - Professional Randomization with Fisher-Yates
+// QUIZ GENERATOR - Backend Quiz Generation with Database Storage
 // ============================================================================
 const QuizGenerator = () => {
   const navigate = useNavigate()
@@ -38,26 +37,12 @@ const QuizGenerator = () => {
   const [difficulty, setDifficulty] = useState('mixed')
   const [questionCount, setQuestionCount] = useState(10)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [sessionUsedQuestions, setSessionUsedQuestions] = useState(new Set())
 
   // Redux/Zustand store
   const {
     currentQuiz,
     setCurrentQuiz,
   } = useQuizStore()
-
-  // ========== LOAD SESSION DATA ==========
-  // Restore used questions from session storage on mount
-  useEffect(() => {
-    const storedUsedQuestions = sessionStorage.getItem('usedQuestionIds')
-    if (storedUsedQuestions) {
-      try {
-        setSessionUsedQuestions(new Set(JSON.parse(storedUsedQuestions)))
-      } catch (e) {
-        console.warn('Could not restore used questions:', e)
-      }
-    }
-  }, [])
 
   // ========== VALIDATION ==========
   if (!currentQuiz) {
@@ -81,65 +66,33 @@ const QuizGenerator = () => {
     )
   }
 
-  // ========== GENERATE QUIZ WITH FISHER-YATES SHUFFLE ==========
+  // ========== GENERATE QUIZ FROM BACKEND API ==========
   const handleGenerateQuiz = async () => {
     setIsGenerating(true)
 
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1500))
-
     try {
-      // Create QuizEngine instance
-      const engine = new QuizEngine(
+      const response = await quizService.generate(
         currentQuiz.topic,
         difficulty,
         questionCount
       )
+      
+      const quizData = response.data?.quiz
 
-      // Set previous session used IDs for cross-session tracking
-      engine.setPreviousSessionUsedIds(sessionUsedQuestions)
-
-      // Generate unique questions using Fisher-Yates shuffle
-      const questions = engine.generateQuiz()
-
-      if (questions.length === 0) {
-        showToast('No questions available for this topic with selected difficulty', 'warning')
+      if (!quizData || !quizData.questions || quizData.questions.length === 0) {
+        showToast('Failed to generate quiz. Backend returned empty questions.', 'error')
         setIsGenerating(false)
         return
       }
 
-      // If fewer questions than requested, notify user
-      if (questions.length < questionCount) {
-        console.warn(
-          `Requested ${questionCount} questions, but only ${questions.length} unique questions available`
-        )
-        showToast(
-          `Only ${questions.length} questions available for this configuration`,
-          'info'
-        )
-      }
-
-      // Track used questions in this session
-      engine.markQuestionsAsUsed()
-      const usedIds = Array.from(engine.sessionUsedQuestionIds)
-      sessionStorage.setItem('usedQuestionIds', JSON.stringify(usedIds))
-      setSessionUsedQuestions(new Set(usedIds))
-
-      // Create quiz object with validation
+      // Format payload structure for frontend store (convert questions_count to questionCount)
       const quiz = {
-        id: Date.now(),
-        topic: currentQuiz.topic || 'Python',
-        difficulty: difficulty || 'mixed',
-        questionCount: questions.length || 0,
-        questions: Array.isArray(questions) ? questions : [],
-        createdAt: new Date(),
-      }
-
-      // Validate quiz object before storing
-      if (!quiz.questions || quiz.questions.length === 0) {
-        showToast('Failed to generate quiz. No questions available.', 'error')
-        setIsGenerating(false)
-        return
+        id: quizData.id,
+        topic: quizData.topic,
+        difficulty: quizData.difficulty,
+        questionCount: quizData.questions_count || quizData.questions.length,
+        questions: quizData.questions,
+        createdAt: quizData.created_at || new Date(),
       }
 
       // Ensure each question has required fields
@@ -152,8 +105,8 @@ const QuizGenerator = () => {
       )
 
       if (!allQuestionsValid) {
-        console.error('Invalid question structure detected:', quiz.questions)
-        showToast('Quiz contains invalid questions. Please try again.', 'error')
+        console.error('Invalid question structure from backend:', quiz.questions)
+        showToast('Generated quiz contains invalid question structure.', 'error')
         setIsGenerating(false)
         return
       }
@@ -161,11 +114,12 @@ const QuizGenerator = () => {
       // Update store and navigate
       setCurrentQuiz(quiz)
       setIsGenerating(false)
-      showToast(`Quiz ready with ${questions.length} questions!`, 'success')
+      showToast(`Quiz ready with ${quiz.questions.length} questions!`, 'success')
       navigate('/quiz')
     } catch (error) {
-      console.error('Error generating quiz:', error)
-      showToast('Error generating quiz. Please try again.', 'error')
+      console.error('Error generating quiz from backend:', error)
+      const errMsg = error.userMessage || error.response?.data?.error || 'Error generating quiz. Please try again.'
+      showToast(errMsg, 'error')
       setIsGenerating(false)
     }
   }
