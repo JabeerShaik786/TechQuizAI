@@ -12,7 +12,7 @@ const MainLayout = ({ children }) => {
     <div className={`min-h-screen w-full overflow-x-hidden bg-[#020617] md:flex ${darkMode ? 'text-white' : 'text-slate-100'}`}>
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="min-h-screen flex flex-col w-full">
+      <div className="min-h-screen flex flex-col flex-1 min-w-0">
         <NavBar onMenuClick={() => setSidebarOpen(true)} />
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden bg-[#020617]">

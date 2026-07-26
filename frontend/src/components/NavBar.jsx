@@ -19,7 +19,7 @@ const NavBar = ({ onMenuClick }) => {
 
   return (
     <nav className="sticky top-0 z-40 glass-lg border-b border-cyberpunk-blue/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2">

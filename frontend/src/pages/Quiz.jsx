@@ -233,7 +233,7 @@ const Quiz = () => {
   const timeWarning = timeLeft < 60
 
   return (
-    <div className="min-h-screen w-full flex flex-col relative overflow-hidden">
+    <div className="w-full max-w-5xl mx-auto relative">
       {/* Floating background elements */}
       <div className="fixed inset-0 pointer-events-none">
         <motion.div
@@ -249,7 +249,7 @@ const Quiz = () => {
       </div>
 
       {/* Main content */}
-      <div className="max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 lg:py-10 relative z-10">
+      <div className="relative z-10 w-full">
 
         {/* ==================== HEADER ==================== */}
 

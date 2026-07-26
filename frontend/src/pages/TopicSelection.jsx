@@ -233,23 +233,23 @@ const TopicSelection = () => {
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col relative overflow-hidden">
+    <div className="w-full relative">
       {/* Floating background elements */}
       <div className="fixed inset-0 pointer-events-none">
         <motion.div
-          className="absolute top-40 right-20 w-96 h-96 rounded-full bg-purple-500/5 blur-3xl"
-          animate={{ y: [0, 60, 0], x: [0, 40, 0] }}
-          transition={{ duration: 10, repeat: Infinity }}
+          className="absolute -top-40 right-20 w-96 h-96 rounded-full bg-purple-500/5 blur-3xl"
+          animate={{ y: [0, 50, 0] }}
+          transition={{ duration: 8, repeat: Infinity }}
         />
         <motion.div
-          className="absolute -bottom-40 left-32 w-80 h-80 rounded-full bg-cyan-500/5 blur-3xl"
-          animate={{ y: [0, -60, 0], x: [0, -40, 0] }}
-          transition={{ duration: 12, repeat: Infinity }}
+          className="absolute -bottom-40 left-20 w-80 h-80 rounded-full bg-cyan-500/5 blur-3xl"
+          animate={{ y: [0, -50, 0] }}
+          transition={{ duration: 10, repeat: Infinity }}
         />
       </div>
 
       {/* Main content */}
-      <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 lg:py-16 relative z-10">
+      <div className="relative z-10 w-full">
 
         {/* ==================== HERO SECTION ==================== */}
 

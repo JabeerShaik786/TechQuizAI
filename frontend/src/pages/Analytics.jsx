@@ -56,7 +56,7 @@ const Analytics = () => {
       }))
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="w-full space-y-8">
       <SectionTitle>Your Analytics</SectionTitle>
 
       {error && (

@@ -137,8 +137,7 @@ const QuizGenerator = () => {
   const maxQuestions = Math.min(20, availableQuestions)
 
   return (
-    <div className="min-h-screen w-full flex flex-col">
-      <div className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+    <div className="w-full max-w-4xl mx-auto space-y-8">
 
         <SectionTitle>
           Generate{' '}
@@ -330,11 +329,10 @@ const QuizGenerator = () => {
             )}
           </motion.div>
         </motion.div>
-      </div>
 
-      <ToastContainer toasts={toasts} />
-    </div>
-  )
-}
+        <ToastContainer toasts={toasts} />
+      </div>
+    )
+  }
 
 export default QuizGenerator

@@ -125,7 +125,7 @@ const Dashboard = () => {
   ]
 
   return (
-    <div className="w-full overflow-x-hidden bg-[#020617]">
+    <div className="w-full relative">
       {/* Floating background elements - fixed positioning doesn't affect layout */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <motion.div
@@ -141,7 +141,7 @@ const Dashboard = () => {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 lg:py-16">
+      <div className="relative z-10 w-full">
 
         {/* ==================== HERO SECTION ==================== */}
 

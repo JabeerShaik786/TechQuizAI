@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { X, Home, BookOpen, Zap, TrendingUp, Users, Settings, LogOut } from 'lucide-react'
@@ -10,6 +11,16 @@ const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuthStore()
   const { handleLogout } = useAuthService()
+
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const handleLogoutClick = async () => {
     await handleLogout()
@@ -26,10 +37,10 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   return (
     <motion.aside
-      initial={{ x: -300 }}
-      animate={{ x: isOpen ? 0 : -300 }}
+      initial={{ x: isDesktop ? 0 : -300 }}
+      animate={{ x: isDesktop ? 0 : (isOpen ? 0 : -300) }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="fixed left-0 top-0 h-screen w-64 bg-gradient-cyber glass-lg border-r border-cyberpunk-blue/20 z-50 md:relative md:translate-x-0"
+      className="fixed left-0 top-0 h-screen w-64 bg-gradient-cyber glass-lg border-r border-cyberpunk-blue/20 z-50 md:relative"
     >
       {/* Close Button */}
       <motion.button
