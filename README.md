@@ -113,7 +113,7 @@ TechQuizAi/
    npm run build
    ```
 
-Frontend will be available at `http://localhost:3000`
+Frontend will be available at `http://localhost:3001`
 
 ### Backend Setup
 
@@ -177,11 +177,12 @@ PUT    /api/auth/profile             # Update profile
 POST   /api/auth/logout              # Logout
 ```
 
-### Quiz Endpoints
+### Quiz Endpoints (Backend-Driven Architecture)
+Quiz generation is fully backend-driven, ensuring questions are stored securely and generated using a transaction-safe Fisher-Yates selection engine from the backend questions database.
 ```
 GET    /api/quiz/topics              # Get available topics
-POST   /api/quiz/generate            # Generate new quiz
-POST   /api/quiz/submit              # Submit quiz answers
+POST   /api/quiz/generate            # Generate new quiz (Creates DB Quiz & Questions records, returns payload)
+POST   /api/quiz/submit              # Submit quiz answers (Validates answers against DB Question records, updates XP/Stats in transaction)
 GET    /api/quiz/history             # Get quiz history
 GET    /api/quiz/:id                 # Get specific quiz
 ```
@@ -274,7 +275,7 @@ web: gunicorn app:app
 
 ### Frontend (.env)
 ```
-VITE_API_URL=http://localhost:5000
+VITE_API_URL=http://localhost:5000/api   # Must include the /api prefix
 VITE_APP_NAME=TechQuiz AI
 ```
 
@@ -284,7 +285,7 @@ FLASK_ENV=development
 JWT_SECRET_KEY=your-secret-key
 DATABASE_URL=sqlite:///techquiz.db
 GEMINI_API_KEY=your-key
-CORS_ORIGINS=http://localhost:3000
+CORS_ORIGINS=http://localhost:3001
 ```
 
 ## 🤝 Contributing
