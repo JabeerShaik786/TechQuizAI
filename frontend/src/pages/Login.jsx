@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { useAuthService } from '../hooks/useAuthService'
 import { Button } from '../components/UIComponents'
@@ -101,8 +101,11 @@ const Login = () => {
             type="submit"
             className="w-full py-3 rounded-lg bg-gradient-to-r from-cyberpunk-blue to-cyberpunk-purple text-white font-semibold hover:shadow-neon transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
+            {isLoading ? (
+              <Loader className="animate-spin text-white" size={18} />
+            ) : null}
             {isLoading ? 'Logging in...' : 'Login'}
-            <ArrowRight size={18} />
+            {!isLoading && <ArrowRight size={18} />}
           </motion.button>
         </form>
 

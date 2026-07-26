@@ -20,7 +20,7 @@ const MainLayout = ({ children }) => {
   }
 
   return (
-    <div className={`min-h-screen w-full overflow-x-hidden bg-[#020617] md:flex ${darkMode ? 'text-white' : 'text-slate-100'}`}>
+    <div className={`h-screen w-full overflow-hidden bg-[#020617] md:flex ${darkMode ? 'text-white' : 'text-slate-100'}`}>
       <Sidebar 
         isOpen={sidebarOpen} 
         onClose={() => setSidebarOpen(false)} 
@@ -28,7 +28,7 @@ const MainLayout = ({ children }) => {
         onToggleCollapse={handleToggleCollapse}
       />
 
-      <div className="min-h-screen flex flex-col flex-1 min-w-0">
+      <div className="h-screen flex flex-col flex-1 min-w-0">
         <NavBar onMenuClick={() => setSidebarOpen(true)} />
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden bg-[#020617]">

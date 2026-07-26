@@ -85,6 +85,7 @@ const Quiz = () => {
 
   const [selectedAnswer, setSelectedAnswer] = useState('')
   const [answered, setAnswered] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (!question?.id) {
@@ -179,6 +180,7 @@ const Quiz = () => {
   }
 
   const handleSubmitQuiz = async () => {
+    setIsSubmitting(true)
     let correctCount = 0
 
     quizQuestions.forEach((q) => {
@@ -219,6 +221,8 @@ const Quiz = () => {
       // Fallback: update with local calculation
       stats.addQuiz(currentQuiz.topic || 'Python', score)
       stats.addXP(score)
+    } finally {
+      setIsSubmitting(false)
     }
 
     navigate(`/results/${currentQuiz.id || 1}`)
@@ -464,7 +468,7 @@ const Quiz = () => {
         >
           <Button
             onClick={handlePrevious}
-            disabled={currentQuestion === 0}
+            disabled={currentQuestion === 0 || isSubmitting}
             variant="secondary"
             size="lg"
             icon={ChevronLeft}
@@ -475,6 +479,7 @@ const Quiz = () => {
 
           <Button
             onClick={handleSkip}
+            disabled={isSubmitting}
             variant="secondary"
             size="lg"
             icon={SkipForward}
@@ -487,11 +492,11 @@ const Quiz = () => {
             onClick={handleNext}
             variant="primary"
             size="lg"
-            icon={currentQuestion === quizQuestions.length - 1 ? Check : ChevronRight}
+            icon={isSubmitting ? undefined : (currentQuestion === quizQuestions.length - 1 ? Check : ChevronRight)}
             className="flex-1"
-            disabled={!answered}
+            disabled={(!answered && currentQuestion < quizQuestions.length - 1) || isSubmitting}
           >
-            {currentQuestion === quizQuestions.length - 1 ? 'Submit Quiz' : 'Next Question'}
+            {isSubmitting ? 'Submitting...' : (currentQuestion === quizQuestions.length - 1 ? 'Submit Quiz' : 'Next Question')}
           </Button>
         </motion.div>
       </div>

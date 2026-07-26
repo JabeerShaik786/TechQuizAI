@@ -31,14 +31,6 @@ export const useAuthService = () => {
 
   const handleLogin = async (email, password) => {
     try {
-      const wakeError = await ensureBackendAwake()
-      if (wakeError) {
-        return {
-          success: false,
-          error: wakeError,
-        }
-      }
-
       console.log('🔐 Attempting login with:', email)
       
       const response = await authService.login({
@@ -57,12 +49,12 @@ export const useAuthService = () => {
       // Update Zustand store with user and token
       login(user, token)
 
-      try {
-        const statsResponse = await analyticsService.getStats()
+      // Hydrate stats in the background without blocking the UI navigation
+      analyticsService.getStats().then((statsResponse) => {
         setStats(statsResponse.data.stats)
-      } catch (statsError) {
+      }).catch((statsError) => {
         console.warn('Unable to hydrate stats after auth:', statsError)
-      }
+      })
       
       console.log('✅ Auth store updated:', { user, token: token.substring(0, 20) + '...' })
 
@@ -91,14 +83,6 @@ export const useAuthService = () => {
 
   const handleSignup = async (userData) => {
     try {
-      const wakeError = await ensureBackendAwake()
-      if (wakeError) {
-        return {
-          success: false,
-          error: wakeError,
-        }
-      }
-
       console.log('🆕 Attempting signup with:', userData.email)
       
       const response = await authService.signup(userData)
@@ -114,12 +98,12 @@ export const useAuthService = () => {
       // Update Zustand store with user and token
       login(user, token)
 
-      try {
-        const statsResponse = await analyticsService.getStats()
+      // Hydrate stats in the background without blocking the UI navigation
+      analyticsService.getStats().then((statsResponse) => {
         setStats(statsResponse.data.stats)
-      } catch (statsError) {
+      }).catch((statsError) => {
         console.warn('Unable to hydrate stats after auth:', statsError)
-      }
+      })
       
       console.log('✅ Auth store updated:', { user, token: token.substring(0, 20) + '...' })
 

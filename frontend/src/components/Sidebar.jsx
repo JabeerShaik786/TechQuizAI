@@ -94,7 +94,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
         </div>
 
         {/* Navigation Menu */}
-        <nav className="flex-1 w-full">
+        <nav className="flex-1 w-full overflow-y-auto pr-1 select-none">
           <div className="space-y-2 w-full">
             {menuItems.map((item) => {
               const isActive = location.pathname === item.href
@@ -126,7 +126,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
         </nav>
 
         {/* Logout Button */}
-        <div className="w-full mt-auto">
+        <div className="w-full mt-auto pt-4 border-t border-cyberpunk-blue/10">
           <motion.button
             whileHover={{ scale: 1.02 }}
             onClick={handleLogoutClick}

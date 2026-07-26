@@ -159,18 +159,18 @@ class QuizService:
                 )
                 db.session.add(stat)
                 
-            # Award Badges
+            # Award Badges (Fetch all in one query, count via SELECT count)
             new_badges_awarded = []
+            earned_badge_names = {b.badge_name for b in Badge.query.filter_by(user_id=user_id_int).all()}
             
             def award_badge(name, icon):
-                existing = Badge.query.filter_by(user_id=user_id_int, badge_name=name).first()
-                if not existing:
+                if name not in earned_badge_names:
                     new_badge = Badge(user_id=user_id_int, badge_name=name, icon=icon)
                     db.session.add(new_badge)
                     new_badges_awarded.append(new_badge.to_dict())
             
             # Check badge metrics
-            completed_quizzes_count = len(Quiz.query.filter_by(user_id=user_id_int, completed=True).all()) + 1 # Include this one
+            completed_quizzes_count = Quiz.query.filter_by(user_id=user_id_int, completed=True).count() + 1 # Include this one
             
             # 1. First Quiz Completed
             if completed_quizzes_count >= 1:
@@ -185,7 +185,7 @@ class QuizService:
             if user.streak >= 3:
                 award_badge("On Fire", "🔥")
             # 5. Topic Specialist (3 or more in same topic)
-            topic_completed_count = len(Quiz.query.filter_by(user_id=user_id_int, topic=quiz.topic, completed=True).all()) + 1
+            topic_completed_count = Quiz.query.filter_by(user_id=user_id_int, topic=quiz.topic, completed=True).count() + 1
             if topic_completed_count >= 3:
                 award_badge(f"{quiz.topic} Specialist", "🎓")
                 
