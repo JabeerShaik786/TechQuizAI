@@ -64,7 +64,7 @@ def create_app():
                 "max_age": 3600,
             }
         },
-        supports_credentials=True,
+        supports_credentials=False,
     )
 
     # -----------------------------
@@ -86,7 +86,7 @@ def create_app():
             if 'users' in inspector.get_table_names():
                 columns = [column['name'] for column in inspector.get_columns('users')]
                 if 'last_quiz_date' not in columns:
-                    db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_quiz_date DATE"))
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN last_quiz_date DATE"))
                     db.session.commit()
         except Exception as exc:
             print('Schema migration warning:', str(exc))

@@ -19,9 +19,12 @@ class DevelopmentConfig(Config):
 
 
 class ProductionConfig(Config):
-
     # Render-compatible SQLite path
-    db_path = os.path.join("/tmp", "techquiz.db")
+    # Fallback to BASE_DIR on Windows or systems without /tmp
+    if os.name == 'nt' or not os.path.exists('/tmp'):
+        db_path = os.path.join(BASE_DIR, "techquiz.db")
+    else:
+        db_path = os.path.join("/tmp", "techquiz.db")
 
     SQLALCHEMY_DATABASE_URI = f"sqlite:///{db_path}"
 

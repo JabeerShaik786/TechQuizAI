@@ -17,14 +17,55 @@ def generate_quiz():
     user_id = get_jwt_identity()
     data = request.get_json()
     
-    if not data or not all(k in data for k in ('topic', 'difficulty', 'question_count')):
-        return jsonify({'error': 'Missing required fields'}), 400
+    if not data:
+        return jsonify({'error': 'Request body is empty'}), 400
+        
+    topic = data.get('topic')
+    difficulty = data.get('difficulty')
+    question_count = data.get('question_count')
+    
+    # 1. Validate topic presence & type
+    if not topic or not isinstance(topic, str):
+        return jsonify({'error': 'Topic is required and must be a string'}), 400
+        
+    from services.questions_db import questions_db
+    if topic not in questions_db:
+        return jsonify({
+            'error': f"Topic '{topic}' is not supported. Supported topics: {', '.join(questions_db.keys())}"
+        }), 400
+        
+    # 2. Validate difficulty
+    if difficulty not in ('easy', 'medium', 'hard', 'mixed'):
+        return jsonify({'error': "Difficulty must be one of 'easy', 'medium', 'hard', 'mixed'"}), 400
+        
+    # 3. Validate question_count
+    try:
+        q_count = int(question_count)
+    except (ValueError, TypeError):
+        return jsonify({'error': 'Question count must be a valid integer'}), 400
+        
+    if q_count <= 0:
+        return jsonify({'error': 'Question count must be greater than zero'}), 400
+        
+    # Cap requested question count at maximum available in the question bank for this topic/difficulty
+    all_qs = questions_db[topic]
+    if difficulty != 'mixed':
+        available_count = len([q for q in all_qs if q['difficulty'] == difficulty])
+    else:
+        available_count = len(all_qs)
+        
+    if available_count == 0:
+        return jsonify({'error': f"No questions available for topic '{topic}' with difficulty '{difficulty}'"}), 400
+        
+    # If the user requests more questions than available, we cap it at available_count
+    # rather than failing, but we can also notify them.
+    # To be safe, we will pass the capped count or the requested count (the service will cap it).
     
     result, status_code = QuizService.generate_quiz(
         user_id,
-        data['topic'],
-        data['difficulty'],
-        data['question_count']
+        topic,
+        difficulty,
+        min(q_count, available_count)
     )
     
     return jsonify(result), status_code

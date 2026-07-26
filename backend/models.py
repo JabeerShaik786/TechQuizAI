@@ -94,10 +94,12 @@ class Question(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
+            'question': self.question_text,
             'question_text': self.question_text,
             'question_type': self.question_type,
             'options': self.options,
             'correct_answer': self.correct_answer,
+            'correctAnswer': self.correct_answer,
             'explanation': self.explanation,
             'difficulty': self.difficulty
         }
@@ -133,5 +135,5 @@ class Badge(db.Model):
         return {
             'name': self.badge_name,
             'icon': self.icon,
-            'earned_at': self.earned_at.isoformat()
+            'earned_at': self.earned_at.isoformat() if self.earned_at else datetime.utcnow().isoformat()
         }
