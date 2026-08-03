@@ -48,10 +48,15 @@ const AIAssistant = ({ fullPage = false }) => {
   const getAIResponse = async (text, history = []) => {
     try {
       const response = await authService.chatAssistant(text, history)
-      return response.data?.reply || response.data?.response || null
+      const reply = response.data?.reply || response.data?.response
+      if (!reply) {
+        throw new Error('Empty response from AI assistant.')
+      }
+      return reply
     } catch (error) {
-      console.error('AI chat error', error)
-      return null
+      console.error('AI chat error:', error)
+      const errMsg = error.response?.data?.error || error.response?.data?.reply || error.userMessage || error.message || 'AI service is currently unreachable.'
+      throw new Error(errMsg)
     }
   }
 
@@ -84,28 +89,20 @@ const AIAssistant = ({ fullPage = false }) => {
     try {
       const responseText = await getAIResponse(text, [...currentConversation, userMessage])
 
-      if (responseText) {
-        // Add message with typing effect
-        const botMessage = {
-          id: Date.now() + 2,
-          type: 'bot',
-          text: responseText,
-          timestamp: new Date(),
-        }
-        addMessage(botMessage)
-      } else {
-        addMessage({
-          id: Date.now() + 3,
-          type: 'bot',
-          text: "I had trouble processing that. Could you rephrase your question? I'm here to help! 💡",
-          timestamp: new Date(),
-        })
+      // Add message
+      const botMessage = {
+        id: Date.now() + 2,
+        type: 'bot',
+        text: responseText,
+        timestamp: new Date(),
       }
+      addMessage(botMessage)
     } catch (error) {
+      console.error('Error handling AI response:', error)
       addMessage({
         id: Date.now() + 4,
         type: 'bot',
-        text: 'Sorry, I encountered an error. Please try again.',
+        text: `❌ AI Error: ${error.message || 'I had trouble processing that. Please try again.'}`,
         timestamp: new Date(),
       })
     } finally {

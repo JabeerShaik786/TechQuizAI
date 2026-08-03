@@ -88,16 +88,19 @@ class AIService:
             }, 200
 
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return {'error': str(e)}, 500
 
     @staticmethod
     def get_recommendations(user_id):
         try:
-            user = User.query.get(user_id)
+            user_id_int = int(user_id)
+            user = User.query.get(user_id_int)
             if not user:
                 return {'error': 'User not found'}, 404
 
-            stats = UserStat.query.filter_by(user_id=user_id).all()
+            stats = UserStat.query.filter_by(user_id=user_id_int).all()
             if not stats:
                 return {
                     'recommendations': [],
@@ -128,26 +131,29 @@ class AIService:
                 'overall_accuracy': f'{overall:.1f}%'
             }, 200
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return {'error': str(e)}, 500
 
     @staticmethod
     def get_chat_response(user_id, message, history=None):
         try:
-            user = User.query.get(user_id)
+            user_id_int = int(user_id)
+            user = User.query.get(user_id_int)
             if not user:
                 return {'error': 'User not found'}, 404
 
             history = history or []
             
             # Fetch user statistics and performance context
-            stats = UserStat.query.filter_by(user_id=user_id).all()
+            stats = UserStat.query.filter_by(user_id=user_id_int).all()
             completed_quizzes_count = sum(s.quizzes_completed for s in stats) if stats else 0
             average_accuracy = (sum(s.accuracy for s in stats) / len(stats)) if stats else 0
             
             weak_topics = [s.topic for s in sorted(stats, key=lambda x: x.accuracy)[:3]]
             strong_topics = [s.topic for s in sorted(stats, key=lambda x: x.accuracy, reverse=True)[:3]]
             
-            recent_quizzes = Quiz.query.filter_by(user_id=user_id, completed=True).order_by(Quiz.created_at.desc()).limit(5).all()
+            recent_quizzes = Quiz.query.filter_by(user_id=user_id_int, completed=True).order_by(Quiz.created_at.desc()).limit(5).all()
             recent_results = []
             for q in recent_quizzes:
                 recent_results.append(f"- Topic: {q.topic}, Score: {q.score:.0f}%, Difficulty: {q.difficulty}")
@@ -190,9 +196,11 @@ class AIService:
             }, 200
             
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return {
                 'error': str(e),
-                'response': 'Sorry, I had trouble processing that. Please try again with more detail.',
-                'reply': 'Sorry, I had trouble processing that. Please try again with more detail.',
+                'response': f"AI Error: {str(e)}",
+                'reply': f"I'm temporarily unavailable. Gemini API error: {str(e)}",
                 'timestamp': datetime.now().isoformat()
             }, 500

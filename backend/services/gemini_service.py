@@ -110,5 +110,7 @@ class GeminiService:
                 return response.text
 
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             logging.error(f"Failed to generate response from Gemini: {str(e)}")
-            return "I'm temporarily unavailable. Please try again shortly."
+            return f"I'm temporarily unavailable. Gemini API error: {str(e)}"
