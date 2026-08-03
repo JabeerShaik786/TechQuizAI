@@ -45,6 +45,8 @@ const ProtectedRoute = ({ children }) => {
   return children
 }
 
+const basename = import.meta.env.BASE_URL?.replace(/\/$/, '') || ''
+
 function App() {
   const { darkMode } = useSettingsStore()
 
@@ -54,7 +56,7 @@ function App() {
   }, [darkMode])
 
   return (
-    <Router>
+    <Router basename={basename}>
       <ToastContainer
         position="bottom-right"
         autoClose={3000}

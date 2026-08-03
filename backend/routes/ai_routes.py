@@ -32,117 +32,12 @@ def get_recommendations():
 @jwt_required()
 def chat():
     """Chat with AI assistant"""
-    import os
-    import logging
-
-    # Check if API key is configured
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        return jsonify({
-            "success": False,
-            "message": "Gemini API key is not configured."
-        }), 503
-
     user_id = get_jwt_identity()
-    user_id_type = type(user_id)
-    auth_header = request.headers.get('Authorization')
-    
-    from flask_jwt_extended import get_jwt
-    decoded_jwt = get_jwt()
-    
-    print("=== TEMPORARY AUTHENTICATION AUDIT ===")
-    print("JWT identity:", user_id)
-    print("type(JWT identity):", user_id_type)
-    print("Authorization header:", auth_header)
-    print("Authorization Header Received:", auth_header is not None)
-    print("Decoded JWT payload:", decoded_jwt)
-    
-    # Cast user_id safely to integer
-    try:
-        user_id_int = int(user_id)
-    except (ValueError, TypeError) as cast_err:
-        print(f"Failed to cast user_id '{user_id}' to int: {str(cast_err)}")
-        return jsonify({
-            "success": False,
-            "message": f"Unauthorized: invalid token identity format '{user_id}'"
-        }), 401
-        
-    print("SELECTED USER ID:", user_id_int)
-    
-    from models import User
-    
-    # Query database
-    print("Searching for user...")
-    user = User.query.get(user_id_int)
-    print("User query result:", user)
-    
-    if user is None:
-        print("=== DATABASE LOOKUP FAILURE AUDIT ===")
-        print("JWT identity:", user_id)
-        print("identity type:", user_id_type)
-        
-        try:
-            sql_query = str(User.query.filter_by(id=user_id_int).statement.compile(compile_kwargs={"literal_binds": True}))
-        except Exception as sql_err:
-            sql_query = f"Could not compile SQL: {str(sql_err)} (fallback: select * from users where id={user_id_int})"
-            
-        print("SQL query used:", sql_query)
-        
-        try:
-            num_users = User.query.count()
-            first_10_users = [(u.id, u.email) for u in User.query.limit(10).all()]
-        except Exception as db_err:
-            num_users = -1
-            first_10_users = f"Error reading users: {str(db_err)}"
-            
-        print("number of users in database:", num_users)
-        print("first 10 users (id,email):", first_10_users)
-        print("Authorization Header Received:", auth_header is not None)
-        
-        return jsonify({
-            "success": False,
-            "message": f"User not found: ID {user_id_int} not found in DB. Total users in DB: {num_users}."
-        }), 404
-        
-    print(f"User found: {user.name} (ID: {user.id})")
-    
     data = request.get_json()
+    
     if not data or 'message' not in data:
-        return jsonify({
-            "success": False,
-            "message": "Missing message"
-        }), 400
+        return jsonify({'error': 'Missing message'}), 400
     
     history = data.get('history', [])
-    
-    print("Gemini request started...")
-    try:
-        result, status_code = AIService.get_chat_response(user_id_int, data['message'], history)
-        print("Gemini response received...")
-        
-        if status_code == 200:
-            reply = result.get('reply', '')
-            if "temporarily unavailable" in reply.lower() or "api error" in reply.lower():
-                logging.error(f"Gemini API returned error: {reply}")
-                return jsonify({
-                    "success": False,
-                    "message": "AI Tutor is temporarily offline. Please try again later."
-                }), 502
-            
-            return jsonify({
-                "success": True,
-                "response": reply
-            }), 200
-        else:
-            logging.error(f"AIService returned non-200 status: {status_code}, result: {result}")
-            return jsonify({
-                "success": False,
-                "message": "AI Tutor is temporarily offline. Please try again later."
-            }), status_code
-            
-    except Exception as e:
-        logging.error(f"Exception during Gemini request: {str(e)}")
-        return jsonify({
-            "success": False,
-            "message": "An unexpected error occurred while communicating with the AI Tutor."
-        }), 500
+    result, status_code = AIService.get_chat_response(user_id, data['message'], history)
+    return jsonify(result), status_code

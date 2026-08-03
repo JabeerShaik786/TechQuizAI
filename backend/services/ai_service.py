@@ -1,11 +1,9 @@
-import random
+﻿import random
 import re
 from datetime import datetime
-import google.generativeai as genai
-from models import User, UserStat, Question, Quiz
+from models import User, UserStat
 from extensions import db
 from services.recommendation_engine import RecommendationEngine
-from services.gemini_service import GeminiService
 
 class AIService:
     CONCEPT_DATABASE = {
@@ -53,54 +51,20 @@ class AIService:
 
     @staticmethod
     def generate_explanation(question_id, user_answer):
-        """Generate a real Gemini-powered explanation of a quiz question and the chosen answer."""
-        try:
-            question = Question.query.get(question_id)
-            if not question:
-                return {'error': 'Question not found'}, 404
-
-            # Formulate detailed prompt for Gemini
-            prompt = (
-                f"Explain this quiz question and clarify the correct choice.\n"
-                f"Question: {question.question_text}\n"
-                f"Options: {', '.join(question.options) if question.options else 'None'}\n"
-                f"Correct Answer index: {question.correct_answer}\n"
-                f"User Answer index: {user_answer}\n\n"
-                f"Provide a clear, brief, and educational breakdown of the concept and why the right option is correct, and why other options might be wrong."
-            )
-
-            # Request explanation from Gemini
-            GeminiService.init_sdk()
-            if GeminiService._initialized:
-                try:
-                    model = genai.GenerativeModel(model_name='gemini-flash-latest')
-                    response = model.generate_content(prompt)
-                    explanation_text = response.text.strip()
-                except Exception as sdk_err:
-                    explanation_text = question.explanation or f"Correct Answer is Option {question.correct_answer}."
-            else:
-                explanation_text = question.explanation or "Gemini is offline. Please configure GEMINI_API_KEY."
-
-            return {
-                'explanation': explanation_text,
-                'related_topics': [question.difficulty.title(), 'Review'],
-                'learning_resources': ['Read documentation', 'Take practice quizzes']
-            }, 200
-
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return {'error': str(e)}, 500
+        return {
+            'explanation': 'A detailed explanation is generated based on the question context. Please provide the quiz question if you want an exact breakdown.',
+            'related_topics': ['Concept review', 'Example problems'],
+            'learning_resources': ['Review the relevant concept, then try a similar quiz question']
+        }, 200
 
     @staticmethod
     def get_recommendations(user_id):
         try:
-            user_id_int = int(user_id)
-            user = User.query.get(user_id_int)
+            user = User.query.get(user_id)
             if not user:
                 return {'error': 'User not found'}, 404
 
-            stats = UserStat.query.filter_by(user_id=user_id_int).all()
+            stats = UserStat.query.filter_by(user_id=user_id).all()
             if not stats:
                 return {
                     'recommendations': [],
@@ -131,77 +95,119 @@ class AIService:
                 'overall_accuracy': f'{overall:.1f}%'
             }, 200
         except Exception as e:
-            import traceback
-            traceback.print_exc()
             return {'error': str(e)}, 500
 
     @staticmethod
     def get_chat_response(user_id, message, history=None):
         try:
-            user_id_int = int(user_id)
-            user = User.query.get(user_id_int)
+            user = User.query.get(user_id)
             if not user:
                 return {'error': 'User not found'}, 404
 
             history = history or []
-            
-            # Fetch user statistics and performance context
-            stats = UserStat.query.filter_by(user_id=user_id_int).all()
-            completed_quizzes_count = sum(s.quizzes_completed for s in stats) if stats else 0
-            average_accuracy = (sum(s.accuracy for s in stats) / len(stats)) if stats else 0
-            
-            weak_topics = [s.topic for s in sorted(stats, key=lambda x: x.accuracy)[:3]]
-            strong_topics = [s.topic for s in sorted(stats, key=lambda x: x.accuracy, reverse=True)[:3]]
-            
-            recent_quizzes = Quiz.query.filter_by(user_id=user_id_int, completed=True).order_by(Quiz.created_at.desc()).limit(5).all()
-            recent_results = []
-            for q in recent_quizzes:
-                recent_results.append(f"- Topic: {q.topic}, Score: {q.score:.0f}%, Difficulty: {q.difficulty}")
-            recent_results_str = "\n".join(recent_results) if recent_results else "No quizzes completed yet."
+            normalized_history = []
+            for item in history:
+                if not isinstance(item, dict):
+                    continue
+                role = item.get('role')
+                if not role:
+                    role = 'user' if item.get('type') == 'user' else 'assistant'
+                normalized_history.append({
+                    'role': role,
+                    'text': item.get('text') or item.get('content') or ''
+                })
+            history = normalized_history
+            message_lower = message.lower().strip()
+            topic = RecommendationEngine.normalize_topic(message_lower)
+            if not topic:
+                topic = RecommendationEngine.extract_last_topic(history)
 
-            # Build a rich personalized system prompt for Gemini
-            system_instruction = (
-                "You are TechQuizAI.\n\n"
-                "Help students learn programming, aptitude, data science, SQL, Python, Java, AI, cloud computing, interviews, reasoning, and technical concepts.\n\n"
-                "Explain clearly.\n\n"
-                "Use examples.\n\n"
-                "When possible provide short quizzes.\n\n"
-                "Never answer with unsafe or harmful content.\n\n"
-                "Here is the context of the user you are helping:\n"
-                f"- Name: {user.name or 'User'}\n"
-                f"- Level: {user.level or 1}\n"
-                f"- XP: {user.xp or 0}\n"
-                f"- Streak: {user.streak or 0} days\n"
-                f"- Average Accuracy: {average_accuracy:.1f}%\n"
-                f"- Completed Quizzes: {completed_quizzes_count}\n"
-                f"- Weak Topics: {', '.join(weak_topics) if weak_topics else 'None yet'}\n"
-                f"- Strong Topics: {', '.join(strong_topics) if strong_topics else 'None yet'}\n"
-                f"- Recent Quiz Results:\n{recent_results_str}\n\n"
-                "Always tailor your advice, roadmaps, and explanations to their level, accuracy, and weak/strong topics. "
-                "If they ask how they are doing, reference their accuracy and weak areas. "
-                "Be supportive, professional, and clear."
-            )
+            if any(keyword in message_lower for keyword in ['what can you do', 'help', 'how can you help']):
+                return {
+                    'response': RecommendationEngine.build_general_reply(),
+                    'intent': 'help',
+                    'timestamp': datetime.now().isoformat()
+                }, 200
 
-            # Generate Gemini response
-            reply = GeminiService.generate_chat_response(
-                message=message,
-                history=history,
-                system_instruction=system_instruction
-            )
+            if any(keyword in message_lower for keyword in ['motiv', 'encourage', 'inspire', 'push me', 'i failed', 'so tired', 'stressed']):
+                return {
+                    'response': RecommendationEngine.build_motivation(),
+                    'intent': 'motivation',
+                    'timestamp': datetime.now().isoformat()
+                }, 200
+
+            if any(keyword in message_lower for keyword in ['study plan', 'roadmap', 'learning path', 'how should i learn', 'what should i study next', 'prepare for']):
+                stats = UserStat.query.filter_by(user_id=user_id).all()
+                weak_topics = [s.topic for s in sorted(stats, key=lambda x: x.accuracy)[:3]]
+                summary = RecommendationEngine.summarize_performance(stats)
+                return {
+                    'response': RecommendationEngine.build_study_plan(topic, weak_topics, summary),
+                    'intent': 'study_plan',
+                    'timestamp': datetime.now().isoformat()
+                }, 200
+
+            if any(keyword in message_lower for keyword in ['performance', 'progress', 'how am i', 'analyze my', 'weak areas', 'accuracy']):
+                stats = UserStat.query.filter_by(user_id=user_id).all()
+                summary = RecommendationEngine.summarize_performance(stats)
+                return {
+                    'response': f"📊 **Performance Analysis**\n\n{summary}\n\nWant a personalized roadmap based on these results? Just ask!",
+                    'intent': 'performance',
+                    'timestamp': datetime.now().isoformat()
+                }, 200
+
+            if any(keyword in message_lower for keyword in ['why was', 'wrong', 'explain this', 'quiz', 'question']):
+                return {
+                    'response': RecommendationEngine.build_quiz_help(topic),
+                    'intent': 'quiz_help',
+                    'timestamp': datetime.now().isoformat()
+                }, 200
+
+            if any(keyword in message_lower for keyword in ['explain', 'what is', 'how does', 'teach me', 'simplify', 'define']):
+                if topic and topic in AIService.CONCEPT_DATABASE:
+                    info = AIService.CONCEPT_DATABASE[topic]
+                    return {
+                        'response': RecommendationEngine.build_concept_explanation(topic, info),
+                        'intent': 'concept_explanation',
+                        'timestamp': datetime.now().isoformat()
+                    }, 200
+
+                return {
+                    'response': (
+                        "I can explain that! Tell me the exact topic you want to learn about, such as:\n"
+                        "• Python loops\n"
+                        "• database normalization\n"
+                        "• machine learning basics\n"
+                        "• TCP vs UDP\n"
+                    ),
+                    'intent': 'concept_clarification',
+                    'timestamp': datetime.now().isoformat()
+                }, 200
+
+            if message_lower in ['hello', 'hi', 'hey', 'good morning', 'good evening']:
+                return {
+                    'response': (
+                        f"Hey {user.name or 'there'}! 👋 I'm your AI learning assistant.\n\n"
+                        "Ask me to explain a topic, help with quizzes, or build a study plan."
+                    ),
+                    'intent': 'greeting',
+                    'timestamp': datetime.now().isoformat()
+                }, 200
 
             return {
-                'reply': reply,
-                'response': reply,  # Backward compatibility
-                'intent': 'gemini_assistant',
+                'response': (
+                    "That sounds interesting! I can help explain concepts, build study plans, analyze your progress, "
+                    "or support you with quiz strategy. Try asking me something like:\n\n"
+                    "• Explain Python loops\n"
+                    "• Why was my answer wrong?\n"
+                    "• Create a roadmap for cybersecurity\n"
+                    "• Motivate me to keep learning\n"
+                ),
+                'intent': 'fallback',
                 'timestamp': datetime.now().isoformat()
             }, 200
-            
         except Exception as e:
-            import traceback
-            traceback.print_exc()
             return {
                 'error': str(e),
-                'response': f"AI Error: {str(e)}",
-                'reply': f"I'm temporarily unavailable. Gemini API error: {str(e)}",
+                'response': 'Sorry, I had trouble processing that. Please try again with more detail.',
                 'timestamp': datetime.now().isoformat()
             }, 500

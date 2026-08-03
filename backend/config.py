@@ -12,8 +12,6 @@ class Config:
 
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=7)
 
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
 
 class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(BASE_DIR, "techquiz.db")

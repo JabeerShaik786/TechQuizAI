@@ -11,7 +11,6 @@ import {
   ChevronDown,
   Clock,
   Trash2,
-  Loader2,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
@@ -48,15 +47,10 @@ const AIAssistant = ({ fullPage = false }) => {
   const getAIResponse = async (text, history = []) => {
     try {
       const response = await authService.chatAssistant(text, history)
-      const reply = response.data?.reply || response.data?.response
-      if (!reply) {
-        throw new Error('Empty response from AI assistant.')
-      }
-      return reply
+      return response.data?.response || null
     } catch (error) {
-      console.error('AI chat error:', error)
-      const errMsg = error.response?.data?.error || error.response?.data?.reply || error.userMessage || error.message || 'AI service is currently unreachable.'
-      throw new Error(errMsg)
+      console.error('AI chat error', error)
+      return null
     }
   }
 
@@ -89,21 +83,28 @@ const AIAssistant = ({ fullPage = false }) => {
     try {
       const responseText = await getAIResponse(text, [...currentConversation, userMessage])
 
-      // Add message
-      const botMessage = {
-        id: Date.now() + 2,
-        type: 'bot',
-        text: responseText,
-        timestamp: new Date(),
+      if (responseText) {
+        // Add message with typing effect
+        const botMessage = {
+          id: Date.now() + 2,
+          type: 'bot',
+          text: responseText,
+          timestamp: new Date(),
+        }
+        addMessage(botMessage)
+      } else {
+        addMessage({
+          id: Date.now() + 3,
+          type: 'bot',
+          text: "I had trouble processing that. Could you rephrase your question? I'm here to help! 💡",
+          timestamp: new Date(),
+        })
       }
-      addMessage(botMessage)
     } catch (error) {
-      console.error('Error handling AI response:', error)
-      toast.error(error.message || 'Error communicating with AI')
       addMessage({
         id: Date.now() + 4,
         type: 'bot',
-        text: `❌ AI Error: ${error.message || 'I had trouble processing that. Please try again.'}`,
+        text: 'Sorry, I encountered an error. Please try again.',
         timestamp: new Date(),
       })
     } finally {
@@ -305,33 +306,23 @@ const AIAssistant = ({ fullPage = false }) => {
 
             {/* Message input */}
             <div className="flex items-end gap-2">
-              <textarea
+              <input
                 ref={inputRef}
-                rows={1}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    handleSendMessage()
-                  }
-                }}
+                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                 placeholder={isAuthenticated ? 'Ask me anything...' : 'Sign in to chat'}
                 disabled={!isAuthenticated || isLoading}
-                className="flex-1 rounded-2xl border border-cyberpunk-blue/20 bg-cyberpunk-glass px-4 py-2 text-sm text-white outline-none focus:border-cyan-400 focus:shadow-lg focus:shadow-cyan-500/20 transition disabled:cursor-not-allowed disabled:opacity-60 resize-none h-[46px] max-h-32 scrollbar-thin"
+                className="flex-1 rounded-2xl border border-cyberpunk-blue/20 bg-cyberpunk-glass px-4 py-3 text-sm text-white outline-none focus:border-cyan-400 focus:shadow-lg focus:shadow-cyan-500/20 transition disabled:cursor-not-allowed disabled:opacity-60"
               />
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleSendMessage}
                 disabled={!input.trim() || isLoading || !isAuthenticated}
-                className="rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-600 p-3 text-white shadow-lg shadow-cyan-500/30 disabled:opacity-50 transition flex items-center justify-center"
+                className="rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-600 p-3 text-white shadow-lg shadow-cyan-500/30 disabled:opacity-50 transition"
               >
-                {isLoading ? (
-                  <Loader2 size={18} className="animate-spin text-white" />
-                ) : (
-                  <Send size={18} />
-                )}
+                <Send size={18} />
               </motion.button>
             </div>
 

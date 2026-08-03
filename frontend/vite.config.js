@@ -7,6 +7,7 @@ export default ({ mode }) => {
   const apiOrigin = apiUrl.replace(/\/api$/, '')
 
   return defineConfig({
+    base: mode === 'production' ? '/TechQuizAI/' : '/',
     plugins: [react()],
     server: {
       port: 3001,

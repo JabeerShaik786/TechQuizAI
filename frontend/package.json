@@ -1,11 +1,12 @@
 {
   "name": "techquiz-ai-frontend",
   "private": true,
+  "homepage": "https://JabeerShaik786.github.io/TechQuizAI",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node -e \"require('fs').copyFileSync('dist/index.html', 'dist/404.html')\"",
     "preview": "vite preview",
     "lint": "eslint src --ext js,jsx",
     "lint:fix": "eslint src --ext js,jsx --fix"
