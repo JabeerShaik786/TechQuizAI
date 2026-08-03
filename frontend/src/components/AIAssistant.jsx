@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Clock,
   Trash2,
+  Loader2,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
@@ -47,7 +48,7 @@ const AIAssistant = ({ fullPage = false }) => {
   const getAIResponse = async (text, history = []) => {
     try {
       const response = await authService.chatAssistant(text, history)
-      return response.data?.response || null
+      return response.data?.reply || response.data?.response || null
     } catch (error) {
       console.error('AI chat error', error)
       return null
@@ -306,23 +307,33 @@ const AIAssistant = ({ fullPage = false }) => {
 
             {/* Message input */}
             <div className="flex items-end gap-2">
-              <input
+              <textarea
                 ref={inputRef}
+                rows={1}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSendMessage()
+                  }
+                }}
                 placeholder={isAuthenticated ? 'Ask me anything...' : 'Sign in to chat'}
                 disabled={!isAuthenticated || isLoading}
-                className="flex-1 rounded-2xl border border-cyberpunk-blue/20 bg-cyberpunk-glass px-4 py-3 text-sm text-white outline-none focus:border-cyan-400 focus:shadow-lg focus:shadow-cyan-500/20 transition disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex-1 rounded-2xl border border-cyberpunk-blue/20 bg-cyberpunk-glass px-4 py-2 text-sm text-white outline-none focus:border-cyan-400 focus:shadow-lg focus:shadow-cyan-500/20 transition disabled:cursor-not-allowed disabled:opacity-60 resize-none h-[46px] max-h-32 scrollbar-thin"
               />
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleSendMessage}
                 disabled={!input.trim() || isLoading || !isAuthenticated}
-                className="rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-600 p-3 text-white shadow-lg shadow-cyan-500/30 disabled:opacity-50 transition"
+                className="rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-600 p-3 text-white shadow-lg shadow-cyan-500/30 disabled:opacity-50 transition flex items-center justify-center"
               >
-                <Send size={18} />
+                {isLoading ? (
+                  <Loader2 size={18} className="animate-spin text-white" />
+                ) : (
+                  <Send size={18} />
+                )}
               </motion.button>
             </div>
 
