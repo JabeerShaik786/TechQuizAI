@@ -58,7 +58,9 @@ def chat():
     from models import User
     
     # Query database
+    print("Searching for user...")
     user = User.query.get(user_id_int)
+    print("User query result:", user)
     
     if user is None:
         print("=== DATABASE LOOKUP FAILURE AUDIT ===")
