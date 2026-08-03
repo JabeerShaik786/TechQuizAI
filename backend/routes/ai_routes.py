@@ -33,8 +33,18 @@ def get_recommendations():
 def chat():
     """Chat with AI assistant"""
     user_id = get_jwt_identity()
-    print("JWT Identity:", user_id)
-    print("JWT Identity Type:", type(user_id))
+    user_id_type = type(user_id)
+    auth_header = request.headers.get('Authorization')
+    
+    from flask_jwt_extended import get_jwt
+    decoded_jwt = get_jwt()
+    
+    print("=== TEMPORARY AUTHENTICATION AUDIT ===")
+    print("JWT identity:", user_id)
+    print("type(JWT identity):", user_id_type)
+    print("Authorization header:", auth_header)
+    print("Authorization Header Received:", auth_header is not None)
+    print("Decoded JWT payload:", decoded_jwt)
     
     # Cast user_id safely to integer
     try:
@@ -43,14 +53,39 @@ def chat():
         print(f"Failed to cast user_id '{user_id}' to int: {str(cast_err)}")
         return jsonify({'error': f"Unauthorized: invalid token identity format '{user_id}'"}), 401
         
-    # Verify the user exists in database
+    print("SELECTED USER ID:", user_id_int)
+    
     from models import User
+    
+    # Query database
     user = User.query.get(user_id_int)
-    if not user:
-        all_user_ids = [u.id for u in User.query.all()]
-        log_msg = f"User with ID {user_id_int} not found in database. Existing User IDs in DB: {all_user_ids}"
-        print(log_msg)
-        return jsonify({'error': f"User not found: {log_msg}"}), 404
+    
+    if user is None:
+        print("=== DATABASE LOOKUP FAILURE AUDIT ===")
+        print("JWT identity:", user_id)
+        print("identity type:", user_id_type)
+        
+        try:
+            sql_query = str(User.query.filter_by(id=user_id_int).statement.compile(compile_kwargs={"literal_binds": True}))
+        except Exception as sql_err:
+            sql_query = f"Could not compile SQL: {str(sql_err)} (fallback: select * from users where id={user_id_int})"
+            
+        print("SQL query used:", sql_query)
+        
+        try:
+            num_users = User.query.count()
+            first_10_users = [(u.id, u.email) for u in User.query.limit(10).all()]
+        except Exception as db_err:
+            num_users = -1
+            first_10_users = f"Error reading users: {str(db_err)}"
+            
+        print("number of users in database:", num_users)
+        print("first 10 users (id,email):", first_10_users)
+        print("Authorization Header Received:", auth_header is not None)
+        
+        return jsonify({
+            'error': f"User not found: ID {user_id_int} not found in DB. Total users in DB: {num_users}."
+        }), 404
         
     print(f"User found: {user.name} (ID: {user.id})")
     
