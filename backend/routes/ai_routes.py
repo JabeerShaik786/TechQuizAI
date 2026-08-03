@@ -32,6 +32,17 @@ def get_recommendations():
 @jwt_required()
 def chat():
     """Chat with AI assistant"""
+    import os
+    import logging
+
+    # Check if API key is configured
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return jsonify({
+            "success": False,
+            "message": "Gemini API key is not configured."
+        }), 503
+
     user_id = get_jwt_identity()
     user_id_type = type(user_id)
     auth_header = request.headers.get('Authorization')
@@ -51,7 +62,10 @@ def chat():
         user_id_int = int(user_id)
     except (ValueError, TypeError) as cast_err:
         print(f"Failed to cast user_id '{user_id}' to int: {str(cast_err)}")
-        return jsonify({'error': f"Unauthorized: invalid token identity format '{user_id}'"}), 401
+        return jsonify({
+            "success": False,
+            "message": f"Unauthorized: invalid token identity format '{user_id}'"
+        }), 401
         
     print("SELECTED USER ID:", user_id_int)
     
@@ -86,19 +100,49 @@ def chat():
         print("Authorization Header Received:", auth_header is not None)
         
         return jsonify({
-            'error': f"User not found: ID {user_id_int} not found in DB. Total users in DB: {num_users}."
+            "success": False,
+            "message": f"User not found: ID {user_id_int} not found in DB. Total users in DB: {num_users}."
         }), 404
         
     print(f"User found: {user.name} (ID: {user.id})")
     
     data = request.get_json()
     if not data or 'message' not in data:
-        return jsonify({'error': 'Missing message'}), 400
+        return jsonify({
+            "success": False,
+            "message": "Missing message"
+        }), 400
     
     history = data.get('history', [])
     
     print("Gemini request started...")
-    result, status_code = AIService.get_chat_response(user_id_int, data['message'], history)
-    print("Gemini response received...")
-    
-    return jsonify(result), status_code
+    try:
+        result, status_code = AIService.get_chat_response(user_id_int, data['message'], history)
+        print("Gemini response received...")
+        
+        if status_code == 200:
+            reply = result.get('reply', '')
+            if "temporarily unavailable" in reply.lower() or "api error" in reply.lower():
+                logging.error(f"Gemini API returned error: {reply}")
+                return jsonify({
+                    "success": False,
+                    "message": "AI Tutor is temporarily offline. Please try again later."
+                }), 502
+            
+            return jsonify({
+                "success": True,
+                "response": reply
+            }), 200
+        else:
+            logging.error(f"AIService returned non-200 status: {status_code}, result: {result}")
+            return jsonify({
+                "success": False,
+                "message": "AI Tutor is temporarily offline. Please try again later."
+            }), status_code
+            
+    except Exception as e:
+        logging.error(f"Exception during Gemini request: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": "An unexpected error occurred while communicating with the AI Tutor."
+        }), 500

@@ -99,6 +99,7 @@ const AIAssistant = ({ fullPage = false }) => {
       addMessage(botMessage)
     } catch (error) {
       console.error('Error handling AI response:', error)
+      toast.error(error.message || 'Error communicating with AI')
       addMessage({
         id: Date.now() + 4,
         type: 'bot',

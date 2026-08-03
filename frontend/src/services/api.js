@@ -187,6 +187,10 @@ export const authService = {
     return API.post('/ai/chat', { message, history })
   },
 
+  chat: async (message) => {
+    return API.post('/ai/chat', { message })
+  },
+
   getAIRecommendations: async () => {
     return API.get('/ai/recommendations')
   },

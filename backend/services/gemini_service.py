@@ -21,6 +21,20 @@ class GeminiService:
                 logging.warning("GEMINI_API_KEY environment variable is not set. Gemini service will be offline.")
 
     @classmethod
+    def generate_response(cls, message):
+        """Generate a response from Gemini for a single message, returning plain text, never crashing."""
+        cls.init_sdk()
+        if not cls._initialized:
+            return "Gemini API key is not configured."
+        try:
+            model = genai.GenerativeModel('gemini-flash-latest')
+            response = model.generate_content(message)
+            return response.text.strip()
+        except Exception as e:
+            logging.error(f"Error in generate_response: {str(e)}")
+            return "I'm temporarily unavailable. Please try again shortly."
+
+    @classmethod
     def generate_chat_response(cls, message, history=None, system_instruction=None):
         """
         Generate a response from Gemini given a message, history, and system instruction.
